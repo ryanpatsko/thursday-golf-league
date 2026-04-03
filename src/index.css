@@ -1,0 +1,127 @@
+:root {
+  --masters-green: #006747;
+  --masters-green-deep: #004d35;
+  --gold: #ffcc00;
+  --cream: #f4f1ea;
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.72);
+  --line: rgba(255, 255, 255, 0.2);
+  --danger: #ffb4a8;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--masters-green);
+  /* ~18.8px from a 16px browser default — scales every rem-based font size app-wide */
+  font-size: 117.5%;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.5;
+  background: var(--masters-green);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  background: var(--masters-green);
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+select {
+  color: var(--text);
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+select:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+select option,
+select optgroup {
+  background-color: var(--masters-green-deep);
+  color: var(--cream);
+}
+
+/* Per-hole gross vs par badges (used inside table cells on weekly + admin grids) */
+
+.holeScoreBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  padding: 0.15em 0.4em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+.holeScoreBadgeBirdie {
+  background: #7dd3fc;
+  color: #0c4a6e;
+  border-radius: 999px;
+}
+
+.holeScoreBadgeEagle {
+  background: #1e3a8a;
+  color: #f1f5f9;
+  border-radius: 999px;
+}
+
+.holeScoreBadgeBogey {
+  background: #facc15;
+  color: #422006;
+  border-radius: 2px;
+}
+
+.holeScoreBadgeDoubleBogey {
+  background: #fb923c;
+  color: #431407;
+  border-radius: 2px;
+}
+
+.holeScoreBadgeTriple {
+  background: #ef4444;
+  color: #fef2f2;
+  border-radius: 2px;
+}
+
+.holeScoreBadgeBig {
+  background: #78350f;
+  color: #fef3c7;
+  border-radius: 2px;
+}

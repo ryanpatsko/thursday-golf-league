@@ -1,0 +1,19 @@
+# SPA: Amplify Hosting → Rewrites: non-file routes → /index.html (200).
+#
+# Lambda: set VITE_ADMIN_AUTH_URL to your Function URL origin; secrets only on Lambda.
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
