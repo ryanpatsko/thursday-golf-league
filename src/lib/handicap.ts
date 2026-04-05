@@ -28,8 +28,19 @@ export function handicapTotalFromHoles(
   return total
 }
 
+/** True when all nine holes are entered (not a pull / not incomplete). */
+export function hasCompletePostedHoles(row: WeeklyScoreRow | undefined): boolean {
+  if (!row?.holes || row.holes.length !== 9) return false
+  if (row.pulledGross != null) return false
+  return row.holes.every((s) => s != null && Number.isFinite(s))
+}
+
 export function grossTotalFromHoles(row: WeeklyScoreRow | undefined): number | null {
-  if (!row?.holes?.length) return null
+  if (!row) return null
+  if (row.pulledGross != null && Number.isFinite(row.pulledGross)) {
+    return Math.round(row.pulledGross)
+  }
+  if (!row.holes?.length) return null
   let total = 0
   let filled = 0
   for (const s of row.holes) {

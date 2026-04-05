@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import type { FlightId, LeagueData, Team } from './data/leagueTypes'
+import { useMemo, useState } from 'react'
+import type { FlightId, LeagueData, Player, Team } from './data/leagueTypes'
 import { computeHandicapIndex, formatHandicapIndex, grossTotalFromHoles } from './lib/handicap'
 import {
   flightPointsForWeek,
@@ -13,32 +13,64 @@ import {
   teamPointsHalfTotalsThroughWeek,
   teamWeekNetsPostedCount,
 } from './lib/leagueScoring'
+import { formatIsoDateForDisplay } from './lib/formatIsoDateDisplay'
 import { weekNumbersInOrder, weekSelectLabel } from './lib/scheduleWeek'
+import PlayerSeasonHistoryModal from './PlayerSeasonHistoryModal.tsx'
 import { PlayerNameWithSenior } from './PlayerNameWithSenior.tsx'
 import styles from './Home.module.css'
 
 const FLIGHTS: FlightId[] = ['A', 'B', 'C', 'D']
+
+/** Team 1–8 order from ids `team-1` … `team-8` (not standings / points order). */
+function compareTeamsByLeagueNumber(a: Team, b: Team): number {
+  const ma = /^team-(\d+)$/i.exec(a.id)
+  const mb = /^team-(\d+)$/i.exec(b.id)
+  if (ma && mb) return Number(ma[1]) - Number(mb[1])
+  if (ma) return -1
+  if (mb) return 1
+  return a.name.localeCompare(b.name)
+}
 
 function formatStandingScore(n: number | null): string {
   if (n == null) return '—'
   return Number.isInteger(n) ? String(n) : (Math.round(n * 10) / 10).toFixed(1)
 }
 
-function TeamRosterSubtitle({ data, team }: { data: LeagueData; team: Team }) {
+function TeamRosterSubtitle({
+  data,
+  team,
+  week,
+}: {
+  data: LeagueData
+  team: Team
+  week: number
+}) {
   const byId = new Map(data.players.map((p) => [p.id, p]))
+  const wk = String(week)
   return (
     <span className={styles.standingsTeamRoster}>
       {team.playerIds.map((id, i) => {
         const p = byId.get(id)
         const isLast = i === team.playerIds.length - 1
+        const isPull = p != null && data.weeklyScores[p.id]?.[wk]?.pulledGross != null
         return (
           <span key={id}>
             {p ? (
-              <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
+              <span className={styles.standingsRosterNameInline}>
+                <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
+                {isPull ? (
+                  <span
+                    className={styles.standingsPullBadge}
+                    title="Absent — pulled gross from flight"
+                  >
+                    Pull
+                  </span>
+                ) : null}
+              </span>
             ) : (
               id
             )}
-            {!isLast ? ' · ' : null}
+            {!isLast ? '\u00A0\u00A0' : null}
           </span>
         )
       })}
@@ -84,10 +116,13 @@ function TeamWeekCard({
             {team.playerIds.map((pid) => {
               const p = byId.get(pid)
               const label = p?.name ?? pid
+              const weekRow = data.weeklyScores[pid]?.[String(week)]
+              const isPulled = weekRow?.pulledGross != null
+              const isGolfOff = Boolean(weekRow?.golfOffPlayedDate)
               const gross = playerGrossForWeek(data, pid, week)
               const net = p ? playerNetForWeek(data, p, week) : null
               const hcpIdx =
-                p != null
+                p != null && gross != null
                   ? computeHandicapIndex({
                       priorSeasonScores: p.priorSeasonScores,
                       currentSeasonTotals: handicapTotalsBeforeWeek(data, p, week),
@@ -95,6 +130,17 @@ function TeamWeekCard({
                     })
                   : null
               const dropped = droppedNetPlayerId != null && pid === droppedNetPlayerId
+              const netCell =
+                isGolfOff && net != null && weekRow?.golfOffPlayedDate ? (
+                  <span
+                    className={styles.teamCardScoreGolfOff}
+                    title={`Golf-off — played ${formatIsoDateForDisplay(weekRow.golfOffPlayedDate)}`}
+                  >
+                    {formatStandingScore(net)}
+                  </span>
+                ) : (
+                  formatStandingScore(net)
+                )
               return (
                 <tr
                   key={pid}
@@ -106,11 +152,22 @@ function TeamWeekCard({
                   }
                 >
                   <td>
-                    <PlayerNameWithSenior name={label} isSenior={p?.isSenior ?? false} />
+                    <div className={styles.teamCardPlayerCell}>
+                      <PlayerNameWithSenior name={label} isSenior={p?.isSenior ?? false} />
+                      {isPulled && weekRow ? (
+                        <span
+                          className={styles.teamCardPulledTag}
+                          title="Absent — pulled gross from flight"
+                        >
+                          Pulled · gross {weekRow.pulledGross}
+                          {weekRow.pulledFromPlayerName ? ` · ${weekRow.pulledFromPlayerName}` : ''}
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td className={styles.standingsNum}>{formatHandicapIndex(hcpIdx)}</td>
                   <td className={styles.standingsScore}>{formatStandingScore(gross)}</td>
-                  <td className={styles.standingsScore}>{formatStandingScore(net)}</td>
+                  <td className={styles.standingsScore}>{netCell}</td>
                 </tr>
               )
             })}
@@ -139,6 +196,7 @@ export default function StandingsTab({
   selectedWeek: number
   onSelectWeek: (week: number) => void
 }) {
+  const [historyPlayer, setHistoryPlayer] = useState<Player | null>(null)
   const weeks = useMemo(() => weekNumbersInOrder(data), [data])
 
   const { teamWeekPts, teamHalfPts, teamsSorted } = useMemo(() => {
@@ -152,6 +210,11 @@ export default function StandingsTab({
     })
     return { teamWeekPts, teamHalfPts, teamsSorted }
   }, [data, selectedWeek])
+
+  const teamsInLeagueOrder = useMemo(
+    () => [...data.teams].sort(compareTeamsByLeagueNumber),
+    [data],
+  )
 
   const flightPointMaps = useMemo(() => {
     const o = {} as Record<FlightId, Map<string, number>>
@@ -223,7 +286,7 @@ export default function StandingsTab({
                     <td>
                       <div className={styles.standingsTeamCell}>
                         <span className={styles.standingsTeamLabel}>{t.name}</span>
-                        <TeamRosterSubtitle data={data} team={t} />
+                        <TeamRosterSubtitle data={data} team={t} week={selectedWeek} />
                       </div>
                     </td>
                     <td className={styles.standingsNum}>{formatStandingPoints(teamWeekPts.get(t.id) ?? 0)}</td>
@@ -241,29 +304,58 @@ export default function StandingsTab({
             const halfPts = flightHalfPointMaps[flight]
             const players = playersByFlight[flight]
             return (
-              <section key={flight} className={styles.standingsSection} aria-label={`Flight ${flight} standings`}>
-                <h2 className={styles.standingsHeading}>Flight {flight} Standings</h2>
-                <div className={styles.standingsTableWrap}>
-                  <table className={styles.standingsTable}>
-                    <thead>
-                      <tr>
-                        <th>Player</th>
-                        <th className={styles.standingsNum}>Week</th>
-                        <th className={styles.standingsNum}>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {players.map((p) => (
-                        <tr key={p.id}>
-                          <td>
-                            <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
-                          </td>
-                          <td className={styles.standingsNum}>{formatStandingPoints(weekPts.get(p.id) ?? 0)}</td>
-                          <td className={styles.standingsNum}>{formatStandingPoints(halfPts.get(p.id) ?? 0)}</td>
+              <section
+                key={flight}
+                className={`${styles.standingsSection} ${styles.standingsFlightSection}`}
+                aria-label={`Flight ${flight} standings`}
+              >
+                <div className={styles.standingsFlightBody}>
+                  <span className={styles.standingsFlightWatermark} aria-hidden>
+                    {flight}
+                  </span>
+                  <h2 className={styles.standingsHeading}>Flight {flight} Standings</h2>
+                  <div className={styles.standingsTableWrap}>
+                    <table className={styles.standingsTable}>
+                      <thead>
+                        <tr>
+                          <th>Player</th>
+                          <th className={styles.standingsNum}>Week</th>
+                          <th className={styles.standingsNum}>Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {players.map((p) => {
+                          const isPull = data.weeklyScores[p.id]?.[String(selectedWeek)]?.pulledGross != null
+                          return (
+                          <tr key={p.id}>
+                            <td>
+                              <span className={styles.standingsPlayerNameRow}>
+                                <button
+                                  type="button"
+                                  className={styles.standingsPlayerNameBtn}
+                                  aria-label={`${p.name} season history`}
+                                  onClick={() => setHistoryPlayer(p)}
+                                >
+                                  <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
+                                </button>
+                                {isPull ? (
+                                  <span
+                                    className={styles.standingsPullBadge}
+                                    title="Absent — pulled gross from flight"
+                                  >
+                                    Pull
+                                  </span>
+                                ) : null}
+                              </span>
+                            </td>
+                            <td className={styles.standingsNum}>{formatStandingPoints(weekPts.get(p.id) ?? 0)}</td>
+                            <td className={styles.standingsNum}>{formatStandingPoints(halfPts.get(p.id) ?? 0)}</td>
+                          </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </section>
             )
@@ -274,10 +366,18 @@ export default function StandingsTab({
       <hr className={styles.standingsMainDivider} />
 
       <div className={styles.standingsTeamCardsGrid}>
-        {teamsSorted.map((t) => (
+        {teamsInLeagueOrder.map((t) => (
           <TeamWeekCard key={t.id} data={data} team={t} week={selectedWeek} />
         ))}
       </div>
+      {historyPlayer ? (
+        <PlayerSeasonHistoryModal
+          key={historyPlayer.id}
+          data={data}
+          player={historyPlayer}
+          onClose={() => setHistoryPlayer(null)}
+        />
+      ) : null}
     </div>
   )
 }

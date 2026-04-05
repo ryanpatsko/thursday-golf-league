@@ -190,11 +190,37 @@ function validateWeeklyScores(scores) {
       const n = Number(weekKey)
       if (n < 1 || n > 99) return false
       if (!row || typeof row !== 'object') return false
+      const rowKeys = Object.keys(row)
+      for (const rk of rowKeys) {
+        if (
+          rk !== 'holes' &&
+          rk !== 'golfOffPlayedDate' &&
+          rk !== 'pulledGross' &&
+          rk !== 'pulledFromPlayerName'
+        )
+          return false
+      }
       if (!Array.isArray(row.holes)) return false
       if (row.holes.length !== 9) return false
       for (const s of row.holes) {
         if (s === null) continue
         if (typeof s !== 'number' || !Number.isFinite(s) || s < 1 || s > 20) return false
+      }
+      if (row.golfOffPlayedDate != null) {
+        if (typeof row.golfOffPlayedDate !== 'string') return false
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(row.golfOffPlayedDate)) return false
+      }
+      if (row.pulledGross != null) {
+        if (typeof row.pulledGross !== 'number' || !Number.isFinite(row.pulledGross)) return false
+        if (row.pulledGross < 18 || row.pulledGross > 120) return false
+        if (row.golfOffPlayedDate != null) return false
+        for (const s of row.holes) {
+          if (s !== null) return false
+        }
+        if (row.pulledFromPlayerName != null) {
+          if (typeof row.pulledFromPlayerName !== 'string') return false
+          if (row.pulledFromPlayerName.length < 1 || row.pulledFromPlayerName.length > 80) return false
+        }
       }
     }
   }

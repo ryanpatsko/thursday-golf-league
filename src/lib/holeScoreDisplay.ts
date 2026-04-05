@@ -32,7 +32,7 @@ const VARIANT_CLASS: Record<Exclude<HoleScoreDisplayKind, 'par'>, string> = {
   bogey: 'holeScoreBadgeBogey',
   doubleBogey: 'holeScoreBadgeDoubleBogey',
   tripleBogey: 'holeScoreBadgeTriple',
-  quadruplePlus: 'holeScoreBadgeBig',
+  quadruplePlus: 'holeScoreBadgeTriple',
 }
 
 /** Badge classes for `index.css`, or undefined for par / no score. */

@@ -91,14 +91,14 @@ select optgroup {
 }
 
 .holeScoreBadgeBirdie {
-  background: #7dd3fc;
-  color: #0c4a6e;
+  background: #86efac;
+  color: #14532d;
   border-radius: 999px;
 }
 
 .holeScoreBadgeEagle {
-  background: #1e3a8a;
-  color: #f1f5f9;
+  background: #3b82f6;
+  color: #f8fafc;
   border-radius: 999px;
 }
 
@@ -117,11 +117,5 @@ select optgroup {
 .holeScoreBadgeTriple {
   background: #ef4444;
   color: #fef2f2;
-  border-radius: 2px;
-}
-
-.holeScoreBadgeBig {
-  background: #78350f;
-  color: #fef3c7;
   border-radius: 2px;
 }

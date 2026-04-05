@@ -278,6 +278,77 @@
   text-transform: none;
 }
 
+.standingsRosterNameInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.standingsPlayerNameRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* Inline with flight badge; not full-width like weekly table name cell */
+.standingsPlayerNameBtn {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  max-width: 100%;
+  text-align: left;
+}
+
+.standingsPlayerNameBtn:hover {
+  color: var(--gold);
+}
+
+.standingsPlayerNameBtn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.standingsPullBadge {
+  flex-shrink: 0;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(180, 220, 255, 0.95);
+  line-height: 1.2;
+  padding: 0.12em 0.38em;
+  border-radius: 3px;
+  border: 1px solid rgba(180, 220, 255, 0.45);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.teamCardPlayerCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.teamCardPulledTag {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: rgba(180, 220, 255, 0.95);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
 .standingsMainDivider {
   border: none;
   height: 0;
@@ -330,6 +401,20 @@
 
 .teamCardTable {
   font-size: 0.8rem;
+}
+
+.teamCardScoreGolfOff {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65em;
+  min-height: 1.65em;
+  padding: 0.08em 0.42em;
+  border: 1.5px solid rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  box-sizing: border-box;
+  font-weight: inherit;
+  line-height: 1.2;
 }
 
 .teamCardRowDropped td {
@@ -400,6 +485,152 @@
   font-size: 0.85rem;
   text-transform: none;
   letter-spacing: 0.02em;
+}
+
+.weeklyHistoryBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.weeklyHistoryDialog {
+  width: 100%;
+  max-width: min(96vw, 88rem);
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.1rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--masters-green-deep);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.weeklyHistoryHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.weeklyHistoryTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.weeklyHistoryClose {
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--cream);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.weeklyHistoryClose:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.weeklyHistoryFooter {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.weeklyHistoryTableWrap {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: linear-gradient(
+    145deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.weeklyHistoryTable {
+  font-size: 0.8rem;
+}
+
+.weeklyHistoryTable .weeklyThHole {
+  font-size: 0.7rem;
+}
+
+.weeklyThHoleNumPair {
+  display: block;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--cream);
+}
+
+.weeklyTable thead th.weeklyHistoryHoleHead {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+.weeklyHistoryDateCol {
+  min-width: 5.75rem;
+  max-width: 9rem;
+}
+
+.weeklyHistoryNineTd {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--cream);
+}
+
+.weeklyTable thead th.weeklyHistoryParSenior {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.weeklyTable thead th.weeklyHistoryParSenior .weeklyMetaSep {
+  color: var(--gold);
+  opacity: 0.88;
+}
+
+.weeklyPlayerNameBtn {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.weeklyPlayerNameBtn:hover {
+  color: var(--gold);
+}
+
+.weeklyPlayerNameBtn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
 
 .weeklyRoot {
@@ -480,6 +711,23 @@
   vertical-align: middle;
 }
 
+.weeklyPlayerCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.weeklyGolfOffNote {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
 .weeklyTable tbody tr:nth-child(even) {
   background: rgba(0, 0, 0, 0.12);
 }
@@ -537,7 +785,7 @@
 }
 
 .weeklyThNum .weeklySortBtn {
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .weeklyStickyCol .weeklySortBtn {
@@ -576,7 +824,7 @@
 }
 
 .weeklyThNum {
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
   min-width: 3rem;
 }
@@ -593,6 +841,8 @@
   text-align: center;
   font-weight: 700;
   color: var(--gold);
+  background: var(--masters-green-deep);
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.22);
 }
 
 .weeklyTdHole {
@@ -603,7 +853,7 @@
 
 .weeklyTdNum {
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: center;
   font-weight: 600;
 }
 
@@ -616,6 +866,36 @@
   );
   padding: 1rem 1.15rem 1.15rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Flight cards: large translucent letter behind heading + table */
+.standingsFlightBody {
+  position: relative;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.standingsFlightWatermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(5.25rem, 118cqw, 16rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.07em;
+  text-transform: uppercase;
+  color: rgba(0, 103, 71, 0.34);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.standingsFlightBody .standingsHeading,
+.standingsFlightBody .standingsTableWrap {
+  position: relative;
+  z-index: 1;
 }
 
 .standingsHeading {

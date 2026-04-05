@@ -2,8 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import type { CourseNine, FlightId, LeagueData, Player, WeeklyScoreRow } from './data/leagueTypes'
 import { computeHandicapIndex, formatHandicapIndex, getNineForWeek, grossTotalFromHoles, netNineFromGrossAndIndex } from './lib/handicap'
 import { holeScoreBadgeClassName } from './lib/holeScoreDisplay'
-import { handicapTotalsBeforeWeek } from './lib/leagueScoring'
+import {
+  flightPointsForWeek,
+  formatStandingPoints,
+  handicapTotalsBeforeWeek,
+} from './lib/leagueScoring'
+import { formatIsoDateForDisplay } from './lib/formatIsoDateDisplay'
 import { displayHoleNumberOnNine, weekNumbersInOrder, weekSelectLabel } from './lib/scheduleWeek'
+import PlayerSeasonHistoryModal from './PlayerSeasonHistoryModal.tsx'
 import { PlayerNameWithSenior } from './PlayerNameWithSenior.tsx'
 import styles from './Home.module.css'
 
@@ -16,6 +22,7 @@ type WeeklySortKey =
   | 'gross'
   | 'net'
   | 'hcp'
+  | 'flpts'
 
 type WeeklyRow = {
   player: Player
@@ -24,6 +31,7 @@ type WeeklyRow = {
   gross: number | null
   net: number | null
   hcp: number | null
+  flightPts: number | null
   holeScores: (number | null)[]
 }
 
@@ -63,6 +71,9 @@ function sortWeeklyRows(rows: WeeklyRow[], key: WeeklySortKey, dir: 'asc' | 'des
       case 'hcp':
         c = cmpNullableNum(A.hcp, B.hcp, dir)
         break
+      case 'flpts':
+        c = cmpNullableNum(A.flightPts, B.flightPts, dir)
+        break
       default:
         if (key.startsWith('hole-')) {
           const i = Number(key.slice(5))
@@ -92,6 +103,7 @@ export default function WeeklyScoresTab({
   const [sortKey, setSortKey] = useState<WeeklySortKey>('player')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [flightFilter, setFlightFilter] = useState<FlightId | 'all'>('all')
+  const [historyPlayer, setHistoryPlayer] = useState<Player | null>(null)
 
   useEffect(() => {
     setSortKey('player')
@@ -116,19 +128,30 @@ export default function WeeklyScoresTab({
 
   const tableRows = useMemo(() => {
     if (!sched || !scheduledNine) return []
+    const ptsByFlight = {
+      A: flightPointsForWeek(data, 'A', selectedWeek),
+      B: flightPointsForWeek(data, 'B', selectedWeek),
+      C: flightPointsForWeek(data, 'C', selectedWeek),
+      D: flightPointsForWeek(data, 'D', selectedWeek),
+    } as const
     return data.players.map((p): WeeklyRow => {
       const scoreRow = data.weeklyScores[p.id]?.[String(selectedWeek)]
       const nine = getNineForWeek(data.course, scheduledNine, p)
       const gross = grossTotalFromHoles(scoreRow)
       const handicapHistory = handicapTotalsBeforeWeek(data, p, selectedWeek)
-      const hcp = computeHandicapIndex({
-        priorSeasonScores: p.priorSeasonScores,
-        currentSeasonTotals: handicapHistory,
-        asOfLeagueWeek: selectedWeek,
-      })
+      const hcp =
+        gross != null
+          ? computeHandicapIndex({
+              priorSeasonScores: p.priorSeasonScores,
+              currentSeasonTotals: handicapHistory,
+              asOfLeagueWeek: selectedWeek,
+            })
+          : null
       const net = netNineFromGrossAndIndex(gross, hcp)
       const holeScores = nine.holes.map((_, i) => scoreRow?.holes[i] ?? null)
-      return { player: p, scoreRow, nine, gross, net, hcp, holeScores }
+      const flightPts =
+        gross != null && !scoreRow?.pulledGross ? (ptsByFlight[p.flight].get(p.id) ?? 0) : null
+      return { player: p, scoreRow, nine, gross, net, hcp, flightPts, holeScores }
     })
   }, [data, selectedWeek, sched, scheduledNine])
 
@@ -288,6 +311,18 @@ export default function WeeklyScoresTab({
                       HCP{sortMark('hcp')}
                     </button>
                   </th>
+                  <th
+                    rowSpan={2}
+                    scope="col"
+                    className={`${styles.weeklyThNum} ${styles.weeklyThSepLeft}`}
+                    aria-sort={
+                      sortKey === 'flpts' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'
+                    }
+                  >
+                    <button type="button" className={sortBtnClass('flpts')} onClick={() => onHeaderSort('flpts')}>
+                      FLPTS{sortMark('flpts')}
+                    </button>
+                  </th>
                 </tr>
                 <tr>
                   {whiteHoles.map((_, i) => {
@@ -303,10 +338,24 @@ export default function WeeklyScoresTab({
                 </tr>
               </thead>
               <tbody>
-                {displayRows.map(({ player: p, scoreRow: row, nine, gross, net, hcp: idx }) => (
+                {displayRows.map(({ player: p, scoreRow: row, nine, gross, net, hcp: idx, flightPts }) => (
                   <tr key={p.id}>
                     <td className={styles.weeklyStickyCol}>
-                      <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
+                      <div className={styles.weeklyPlayerCell}>
+                        <button
+                          type="button"
+                          className={styles.weeklyPlayerNameBtn}
+                          aria-label={`${p.name} season history`}
+                          onClick={() => setHistoryPlayer(p)}
+                        >
+                          <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
+                        </button>
+                        {row?.golfOffPlayedDate ? (
+                          <span className={styles.weeklyGolfOffNote} title="Golf-off round">
+                            Golf-off {formatIsoDateForDisplay(row.golfOffPlayedDate)}
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                     <td className={styles.weeklyTdFlight}>{p.flight}</td>
                     {nine.holes.map((h, i) => {
@@ -331,6 +380,9 @@ export default function WeeklyScoresTab({
                       {net == null ? '—' : net}
                     </td>
                     <td className={styles.weeklyTdNum}>{formatHandicapIndex(idx)}</td>
+                    <td className={`${styles.weeklyTdNum} ${styles.weeklyThSepLeft}`}>
+                      {flightPts == null ? '—' : formatStandingPoints(flightPts)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -338,6 +390,14 @@ export default function WeeklyScoresTab({
           </div>
         </>
       )}
+      {historyPlayer ? (
+        <PlayerSeasonHistoryModal
+          key={historyPlayer.id}
+          data={data}
+          player={historyPlayer}
+          onClose={() => setHistoryPlayer(null)}
+        />
+      ) : null}
     </div>
   )
 }

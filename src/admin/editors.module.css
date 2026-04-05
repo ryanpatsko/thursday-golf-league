@@ -293,6 +293,77 @@
   color: var(--muted);
 }
 
+.scoresModalGolfOffRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.scoresModalGolfOffLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--cream);
+  cursor: pointer;
+}
+
+.scoresModalGolfOffLabel input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.scoresModalGolfOffDate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.scoresModalGolfOffDateLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.scoresModalDateInput {
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.3rem 0.45rem;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoresPlayerCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.scoresGolfOffTag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
 .scoresModalHoles {
   display: flex;
   flex-wrap: wrap;
@@ -303,9 +374,20 @@
 .scoresModalPrefillRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: flex-start;
+  align-items: center;
+  gap: 0.65rem 1rem;
   margin-bottom: 1.1rem;
+}
+
+.scoresModalPrefillBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/** Pull — same band as golf-off, outside the bordered golf-off box */
+.scoresModalPullOpenBtn {
+  align-self: center;
 }
 
 .scoresModalSaveErr {
@@ -353,4 +435,131 @@
   flex-wrap: wrap;
   gap: 0.65rem;
   justify-content: flex-end;
+}
+
+.scoresModalPullNote {
+  margin: -0.35rem 0 0.85rem;
+  font-size: 0.78rem;
+  color: var(--cream);
+  line-height: 1.45;
+  padding: 0.5rem 0.65rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.scoresModalPullFlightHeading {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--cream);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.scoresModalPullPeerList {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.scoresModalPullPeerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.4rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+
+.scoresModalPullPeerRow:last-child {
+  border-bottom: none;
+}
+
+.scoresModalPullGross {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.scoresModalPullHint {
+  margin: 0 0 0.85rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.scoresModalPullDrawing {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: var(--cream);
+}
+
+@keyframes scoresPullSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scoresPullSpinner {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--line);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: scoresPullSpin 0.7s linear infinite;
+}
+
+.scoresModalPullResult {
+  margin: 0 0 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.65rem 1rem;
+}
+
+.scoresModalPullResultLabel {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.scoresModalPullResultNum {
+  font-size: 1.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.scoresModalPullActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.scoresModalPullActions > :first-child {
+  margin-right: auto;
+}
+
+.scoresPulledTag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(180, 220, 255, 0.95);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }

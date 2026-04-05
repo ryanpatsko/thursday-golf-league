@@ -180,14 +180,27 @@ export function teamPointsForWeek(data: LeagueData, week: number): Map<string, n
 
 export function flightPointsForWeek(data: LeagueData, flight: Player['flight'], week: number): Map<string, number> {
   const inFlight = data.players.filter((p) => p.flight === flight).sort((a, b) => a.name.localeCompare(b.name))
+  const wk = String(week)
   const scoreById = new Map<string, number | null>()
   for (const p of inFlight) {
-    scoreById.set(p.id, playerNetForWeek(data, p, week))
+    const row = data.weeklyScores[p.id]?.[wk]
+    if (row?.pulledGross != null) {
+      scoreById.set(p.id, null)
+    } else {
+      scoreById.set(p.id, playerNetForWeek(data, p, week))
+    }
   }
-  return pointsFromRankedScores(
+  const out = pointsFromRankedScores(
     inFlight.map((p) => p.id),
     scoreById,
   )
+  /** Pulled rounds still drive team net/gross but never earn flight points (even if tie logic would split “last place”). */
+  for (const p of inFlight) {
+    if (data.weeklyScores[p.id]?.[wk]?.pulledGross != null) {
+      out.set(p.id, 0)
+    }
+  }
+  return out
 }
 
 /** Sum team standing points for every scheduled week from the half’s start through `asOfWeek`. */

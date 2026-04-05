@@ -56,6 +56,18 @@ export interface ScheduleRow {
 
 export interface WeeklyScoreRow {
   holes: (number | null)[]
+  /**
+   * Round was played before league night (golf-off). ISO date `YYYY-MM-DD` for the day played.
+   * Omit for a normal Thursday round.
+   */
+  golfOffPlayedDate?: string
+  /**
+   * Absent week: 9-hole gross copied from a random flight peer’s posted round. Holes stay blank.
+   * Not eligible for flight points; still used for team net / gross standings.
+   */
+  pulledGross?: number
+  /** Snapshot of the peer’s display name when `pulledGross` was recorded (for admin clarity). */
+  pulledFromPlayerName?: string
 }
 
 export type WeeklyScores = Record<string, Record<string, WeeklyScoreRow>>

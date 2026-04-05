@@ -1,17 +1,20 @@
 ---
-description: Rebuild Lambda zip after admin-auth changes
-globs: lambda/admin-auth/**
-alwaysApply: false
+description: Always rebuild Lambda zip after admin-auth or packaging script changes
+alwaysApply: true
 ---
 
-# Lambda deployment zip
+# Lambda zip — required agent action
 
-After **any** edit under `lambda/admin-auth/` (including `index.mjs` or `package.json`), run from the **repository root**:
+If **this conversation** edits anything under **`lambda/admin-auth/`** or **`scripts/package-lambda.mjs`**, you **must** run the packager before treating the task as done (unless the user explicitly says not to).
+
+From the **repository root**:
 
 ```bash
 npm run package:lambda
 ```
 
-This produces **`dist/lambda-admin-auth.zip`** for upload to AWS Lambda. Do not skip this step when handing off deployable artifacts.
+That writes **`dist/lambda-admin-auth.zip`** for AWS Lambda upload. After it succeeds, mention that the zip is ready and its path.
 
-If `scripts/package-lambda.mjs` changes, run the same command so packaging stays verified.
+Do **not** only tell the user to run it — execute it yourself in the environment.
+
+If you only changed the frontend and not Lambda, you do **not** need to run this.
