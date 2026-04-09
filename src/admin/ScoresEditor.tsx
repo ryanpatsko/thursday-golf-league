@@ -633,9 +633,13 @@ export default function ScoresEditor({
                       <div className={styles.scoresPlayerCell}>
                         <span>{p.name}</span>
                         {row?.pulledGross != null ? (
-                          <span className={styles.scoresPulledTag} title="Absent — pulled gross from flight">
-                            Pulled · gross {row.pulledGross}
-                            {row.pulledFromPlayerName ? ` · ${row.pulledFromPlayerName}` : ''}
+                          <span
+                            className={styles.scoresPulledTag}
+                            title={`Gross ${row.pulledGross} — absent, scored from flight draw`}
+                          >
+                            {row.pulledFromPlayerName
+                              ? `Pull - ${row.pulledFromPlayerName}`
+                              : 'Pull'}
                           </span>
                         ) : null}
                         {row?.golfOffPlayedDate ? (

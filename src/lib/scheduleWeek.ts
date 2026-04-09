@@ -1,4 +1,5 @@
 import type { LeagueData, LeagueMeta } from '../data/leagueTypes'
+import { formatIsoDateUsMdY } from './formatIsoDateDisplay'
 
 export function toIsoDateLocal(d: Date): string {
   const y = d.getFullYear()
@@ -32,10 +33,10 @@ export function weekNumbersInOrder(data: LeagueData): number[] {
   return [...new Set(data.schedule.map((r) => r.leagueWeekNumber))].sort((a, b) => a - b)
 }
 
-/** Label for week dropdowns (matches schedule date when present). */
+/** Label for week dropdowns, e.g. `Week 1 · 4/16/2026`. */
 export function weekSelectLabel(data: LeagueData, week: number): string {
   const row = data.schedule.find((r) => r.leagueWeekNumber === week)
-  return row ? `Week ${week} · ${row.date}` : `Week ${week}`
+  return row ? `Week ${week} · ${formatIsoDateUsMdY(row.date)}` : `Week ${week}`
 }
 
 /** Course hole number on the scorecard for this league nine (front 1–9, back 10–18). */

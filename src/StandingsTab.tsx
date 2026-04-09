@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react'
 import type { FlightId, LeagueData, Player, Team } from './data/leagueTypes'
-import { computeHandicapIndex, formatHandicapIndex, grossTotalFromHoles } from './lib/handicap'
+import {
+  computeHandicapIndex,
+  formatHandicapIndex,
+  getNineForWeek,
+  grossTotalFromHoles,
+  handicapTotalFromHoles,
+} from './lib/handicap'
 import {
   flightPointsForWeek,
   flightPointsHalfTotalsThroughWeek,
@@ -34,6 +40,14 @@ function compareTeamsByLeagueNumber(a: Team, b: Team): number {
 function formatStandingScore(n: number | null): string {
   if (n == null) return '—'
   return Number.isInteger(n) ? String(n) : (Math.round(n * 10) / 10).toFixed(1)
+}
+
+/** Recorded 9-hole gross vs handicap gross (triple-bogey cap per hole); single value when equal or no cap diff. */
+function formatTeamCardGrs(recorded: number | null, hcpGross: number | null): string {
+  if (recorded == null) return '—'
+  if (hcpGross == null) return String(recorded)
+  if (recorded === hcpGross) return String(recorded)
+  return `${recorded}/${hcpGross}`
 }
 
 function TeamRosterSubtitle({
@@ -108,7 +122,12 @@ function TeamWeekCard({
             <tr>
               <th>Player</th>
               <th className={styles.standingsNum}>HCP</th>
-              <th className={styles.standingsScore}>Gross</th>
+              <th
+                className={styles.standingsScore}
+                title="Recorded 9-hole total; when shown as two numbers, second is handicap gross (each hole capped at triple bogey)."
+              >
+                Grs
+              </th>
               <th className={styles.standingsScore}>Net</th>
             </tr>
           </thead>
@@ -119,6 +138,17 @@ function TeamWeekCard({
               const weekRow = data.weeklyScores[pid]?.[String(week)]
               const isPulled = weekRow?.pulledGross != null
               const isGolfOff = Boolean(weekRow?.golfOffPlayedDate)
+              const sched = data.schedule.find((s) => s.leagueWeekNumber === week)
+              const nine =
+                p && sched ? getNineForWeek(data.course, sched.nine, p) : null
+              const recordedGross = grossTotalFromHoles(weekRow)
+              const handicapGross =
+                weekRow && nine ? handicapTotalFromHoles(weekRow, nine.holes) : null
+              const grsDisplay = formatTeamCardGrs(recordedGross, handicapGross)
+              const grsTitle =
+                recordedGross != null && handicapGross != null && recordedGross !== handicapGross
+                  ? `${recordedGross} recorded / ${handicapGross} handicap gross (max +3 strokes vs par per hole)`
+                  : undefined
               const gross = playerGrossForWeek(data, pid, week)
               const net = p ? playerNetForWeek(data, p, week) : null
               const hcpIdx =
@@ -157,16 +187,19 @@ function TeamWeekCard({
                       {isPulled && weekRow ? (
                         <span
                           className={styles.teamCardPulledTag}
-                          title="Absent — pulled gross from flight"
+                          title={`Gross ${weekRow.pulledGross} — absent, scored from flight draw`}
                         >
-                          Pulled · gross {weekRow.pulledGross}
-                          {weekRow.pulledFromPlayerName ? ` · ${weekRow.pulledFromPlayerName}` : ''}
+                          {weekRow.pulledFromPlayerName
+                            ? `Pull - ${weekRow.pulledFromPlayerName}`
+                            : 'Pull'}
                         </span>
                       ) : null}
                     </div>
                   </td>
                   <td className={styles.standingsNum}>{formatHandicapIndex(hcpIdx)}</td>
-                  <td className={styles.standingsScore}>{formatStandingScore(gross)}</td>
+                  <td className={`${styles.standingsScore} ${styles.teamCardGrsCell}`} title={grsTitle}>
+                    {grsDisplay}
+                  </td>
                   <td className={styles.standingsScore}>{netCell}</td>
                 </tr>
               )

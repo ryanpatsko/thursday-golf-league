@@ -63,12 +63,10 @@ export function relativeToParGross(
 }
 
 /**
- * Rolling 9-hole handicap index: (average of 5 middle scores − 36) × 0.8 after dropping high/low from the most recent 7,
- * then rounded to the nearest whole number — that integer is what net scoring subtracts from gross.
- * Weeks 1–7: pool can include priorSeasonScores (oldest→newest) plus current season in order.
- * Week 8+: league rules use the most recent 7 only (implemented as: drop older prior-season entries once 7 current exist).
+ * `(avg − 36) × 0.8` before rounding, where `avg` is the mean of the middle five scores after dropping
+ * high/low from the most recent seven qualifying totals. Returns `null` if fewer than seven scores.
  */
-export function computeHandicapIndex(args: {
+export function computeHandicapIndexUnrounded(args: {
   priorSeasonScores: number[]
   currentSeasonTotals: number[]
   /** 1-based week number being rated “as of” (week 1 = only priors + week1). */
@@ -94,7 +92,24 @@ export function computeHandicapIndex(args: {
   const trimmed = sorted.slice(1, -1)
   if (trimmed.length !== 5) return null
   const avg = trimmed.reduce((a, b) => a + b, 0) / 5
-  return Math.round((avg - PAR_9_REFERENCE) * 0.8)
+  return (avg - PAR_9_REFERENCE) * 0.8
+}
+
+/**
+ * Rolling 9-hole handicap index: (average of 5 middle scores − 36) × 0.8 after dropping high/low from the most recent 7,
+ * then rounded to the nearest whole number — that integer is what net scoring subtracts from gross.
+ * Weeks 1–7: pool can include priorSeasonScores (oldest→newest) plus current season in order.
+ * Week 8+: league rules use the most recent 7 only (implemented as: drop older prior-season entries once 7 current exist).
+ */
+export function computeHandicapIndex(args: {
+  priorSeasonScores: number[]
+  currentSeasonTotals: number[]
+  /** 1-based week number being rated “as of” (week 1 = only priors + week1). */
+  asOfLeagueWeek: number
+}): number | null {
+  const raw = computeHandicapIndexUnrounded(args)
+  if (raw == null) return null
+  return Math.round(raw)
 }
 
 export function formatHandicapIndex(n: number | null): string {

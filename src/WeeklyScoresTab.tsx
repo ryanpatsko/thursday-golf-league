@@ -284,7 +284,7 @@ export default function WeeklyScoresTab({
                     }
                   >
                     <button type="button" className={sortBtnClass('gross')} onClick={() => onHeaderSort('gross')}>
-                      Gross{sortMark('gross')}
+                      GRS{sortMark('gross')}
                     </button>
                   </th>
                   <th
