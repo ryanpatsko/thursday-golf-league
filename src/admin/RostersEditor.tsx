@@ -68,6 +68,8 @@ export default function RostersEditor({
               <th>Name</th>
               <th>Flight</th>
               <th>Senior</th>
+              <th title="9-hole handicap index used for net when “Use ovr.” is checked.">HCP ovr.</th>
+              <th title="Use the override index instead of the rolling calculation.">Use ovr.</th>
               <th>Prior 7 (gross)</th>
             </tr>
           </thead>
@@ -119,6 +121,61 @@ export default function RostersEditor({
                     onChange={(e) => {
                       const isSenior = e.target.checked
                       setPlayers(data.players.map((x) => (x.id === p.id ? { ...x, isSenior } : x)))
+                    }}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    step="any"
+                    className={styles.inputNarrow}
+                    placeholder="—"
+                    aria-label={`${p.name} handicap override (9-hole index)`}
+                    value={p.handicapOverride?.value ?? ''}
+                    onChange={(e) => {
+                      const t = e.target.value.trim()
+                      setPlayers(
+                        data.players.map((x) => {
+                          if (x.id !== p.id) return x
+                          if (t === '') {
+                            return { ...x, handicapOverride: undefined }
+                          }
+                          const num = Number(t)
+                          if (!Number.isFinite(num)) return x
+                          return {
+                            ...x,
+                            handicapOverride: {
+                              value: num,
+                              active: x.handicapOverride?.active ?? false,
+                            },
+                          }
+                        }),
+                      )
+                    }}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="checkbox"
+                    aria-label={`${p.name} use handicap override for net scoring`}
+                    checked={p.handicapOverride?.active ?? false}
+                    onChange={(e) => {
+                      const active = e.target.checked
+                      setPlayers(
+                        data.players.map((x) => {
+                          if (x.id !== p.id) return x
+                          const v = x.handicapOverride?.value
+                          if (!active) {
+                            if (v == null && !x.handicapOverride) return x
+                            if (v == null) return { ...x, handicapOverride: undefined }
+                            return { ...x, handicapOverride: { value: v, active: false } }
+                          }
+                          if (v == null || !Number.isFinite(v)) {
+                            return x
+                          }
+                          return { ...x, handicapOverride: { value: v, active: true } }
+                        }),
+                      )
                     }}
                   />
                 </td>

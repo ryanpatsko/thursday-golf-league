@@ -1,11 +1,11 @@
 import { useEffect, useMemo } from 'react'
 import type { LeagueData, Player } from './data/leagueTypes'
 import {
-  computeHandicapIndex,
   formatHandicapIndex,
   getNineForWeek,
   grossTotalFromHoles,
   netNineFromGrossAndIndex,
+  playerHandicapIndexAtWeek,
 } from './lib/handicap'
 import { holeScoreBadgeClassName } from './lib/holeScoreDisplay'
 import {
@@ -44,14 +44,7 @@ export default function PlayerSeasonHistoryModal({
       const nine = getNineForWeek(data.course, nineSide, player)
       const gross = grossTotalFromHoles(scoreRow)
       const handicapHistory = handicapTotalsBeforeWeek(data, player, week)
-      const hcp =
-        gross != null
-          ? computeHandicapIndex({
-              priorSeasonScores: player.priorSeasonScores,
-              currentSeasonTotals: handicapHistory,
-              asOfLeagueWeek: week,
-            })
-          : null
+      const hcp = playerHandicapIndexAtWeek(player, handicapHistory, week)
       const net = netNineFromGrossAndIndex(gross, hcp)
       const flightPts = flightPointsForWeek(data, player.flight, week).get(player.id) ?? 0
       return { schedule, week, nineSide, scoreRow, nine, gross, net, hcp, flightPts }

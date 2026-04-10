@@ -1,24 +1,20 @@
 import type { Course, CourseNine, LeagueData, Player, ScheduleRow } from '../data/leagueTypes'
+
+function normalizeHandicapOverride(
+  raw: Player['handicapOverride'],
+): Player['handicapOverride'] | undefined {
+  if (raw == null || typeof raw !== 'object') return undefined
+  const active = raw.active === true
+  const v = typeof raw.value === 'number' ? raw.value : Number(raw.value)
+  if (!Number.isFinite(v)) return undefined
+  return { value: v, active }
+}
 import {
+  defaultLeagueSeniorIds,
   ensureLakevueNorthHandicapsAndLabels,
   lakevueNorthSeniorHalves,
 } from '../data/defaultLeagueData'
 import { addDaysIso } from './dates'
-
-/** If `isSenior` is missing (older JSON), infer from default senior list. */
-const SENIOR_IDS_IF_MISSING = new Set([
-  'jeff-aiken',
-  'bill-ross',
-  'george-schurer',
-  'george-trusik',
-  'denny-notareschi',
-  'craig-pelat',
-  'ed-stefanowicz',
-  'bill-jacobs',
-  'harry-wilson',
-  'bill-schneider',
-  'mick-pappas',
-])
 
 function isLegacyCourse(course: unknown): course is { name: string; front: CourseNine; back: CourseNine } {
   if (!course || typeof course !== 'object') return false
@@ -68,8 +64,9 @@ export function migrateLeagueData(raw: LeagueData): LeagueData {
 
   const players: Player[] = raw.players.map((p) => {
     const isSenior =
-      typeof p.isSenior === 'boolean' ? p.isSenior : SENIOR_IDS_IF_MISSING.has(p.id)
-    return { ...p, isSenior }
+      typeof p.isSenior === 'boolean' ? p.isSenior : defaultLeagueSeniorIds.has(p.id)
+    const handicapOverride = normalizeHandicapOverride(p.handicapOverride)
+    return { ...p, isSenior, handicapOverride }
   })
 
   let out: LeagueData = { ...raw, course, players }

@@ -41,5 +41,18 @@ export function describeLeagueSaveBlocker(data: LeagueData): string | null {
       return `"${p.name}" must appear on exactly one team (currently ${n}).`
     }
   }
+  for (const p of data.players) {
+    const h = p.handicapOverride
+    if (h == null) continue
+    if (typeof h.active !== 'boolean') {
+      return `"${p.name}": handicap override must include active true or false.`
+    }
+    if (typeof h.value !== 'number' || !Number.isFinite(h.value)) {
+      return `"${p.name}": handicap override value must be a finite number.`
+    }
+    if (h.active && (h.value < -10 || h.value > 60)) {
+      return `"${p.name}": when override is on, index must be between -10 and 60.`
+    }
+  }
   return null
 }

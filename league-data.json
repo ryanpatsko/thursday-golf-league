@@ -1,0 +1,935 @@
+{
+  "version": 1,
+  "meta": {
+    "seasonYear": 2026,
+    "seasonStartDate": "2026-04-16",
+    "weeksPerHalf": 9,
+    "totalWeeks": 19
+  },
+  "course": {
+    "name": "Lakevue North",
+    "nonSenior": {
+      "front": {
+        "label": "White - Front 9",
+        "holes": [
+          {
+            "holeNumber": 1,
+            "par": 4,
+            "yardage": 325,
+            "strokeIndex": 8
+          },
+          {
+            "holeNumber": 2,
+            "par": 3,
+            "yardage": 190,
+            "strokeIndex": 6
+          },
+          {
+            "holeNumber": 3,
+            "par": 5,
+            "yardage": 600,
+            "strokeIndex": 1
+          },
+          {
+            "holeNumber": 4,
+            "par": 3,
+            "yardage": 150,
+            "strokeIndex": 17
+          },
+          {
+            "holeNumber": 5,
+            "par": 4,
+            "yardage": 320,
+            "strokeIndex": 7
+          },
+          {
+            "holeNumber": 6,
+            "par": 4,
+            "yardage": 325,
+            "strokeIndex": 16
+          },
+          {
+            "holeNumber": 7,
+            "par": 5,
+            "yardage": 480,
+            "strokeIndex": 15
+          },
+          {
+            "holeNumber": 8,
+            "par": 4,
+            "yardage": 300,
+            "strokeIndex": 11
+          },
+          {
+            "holeNumber": 9,
+            "par": 4,
+            "yardage": 415,
+            "strokeIndex": 2
+          }
+        ]
+      },
+      "back": {
+        "label": "White - Back 9",
+        "holes": [
+          {
+            "holeNumber": 1,
+            "par": 4,
+            "yardage": 290,
+            "strokeIndex": 18
+          },
+          {
+            "holeNumber": 2,
+            "par": 3,
+            "yardage": 155,
+            "strokeIndex": 10
+          },
+          {
+            "holeNumber": 3,
+            "par": 4,
+            "yardage": 300,
+            "strokeIndex": 9
+          },
+          {
+            "holeNumber": 4,
+            "par": 4,
+            "yardage": 355,
+            "strokeIndex": 12
+          },
+          {
+            "holeNumber": 5,
+            "par": 3,
+            "yardage": 185,
+            "strokeIndex": 3
+          },
+          {
+            "holeNumber": 6,
+            "par": 5,
+            "yardage": 445,
+            "strokeIndex": 13
+          },
+          {
+            "holeNumber": 7,
+            "par": 4,
+            "yardage": 420,
+            "strokeIndex": 5
+          },
+          {
+            "holeNumber": 8,
+            "par": 5,
+            "yardage": 435,
+            "strokeIndex": 4
+          },
+          {
+            "holeNumber": 9,
+            "par": 4,
+            "yardage": 385,
+            "strokeIndex": 14
+          }
+        ]
+      }
+    },
+    "senior": {
+      "front": {
+        "label": "Gold - Front 9",
+        "holes": [
+          {
+            "holeNumber": 1,
+            "par": 4,
+            "yardage": 263,
+            "strokeIndex": 8
+          },
+          {
+            "holeNumber": 2,
+            "par": 3,
+            "yardage": 181,
+            "strokeIndex": 6
+          },
+          {
+            "holeNumber": 3,
+            "par": 5,
+            "yardage": 412,
+            "strokeIndex": 1
+          },
+          {
+            "holeNumber": 4,
+            "par": 3,
+            "yardage": 132,
+            "strokeIndex": 17
+          },
+          {
+            "holeNumber": 5,
+            "par": 4,
+            "yardage": 319,
+            "strokeIndex": 7
+          },
+          {
+            "holeNumber": 6,
+            "par": 4,
+            "yardage": 286,
+            "strokeIndex": 16
+          },
+          {
+            "holeNumber": 7,
+            "par": 5,
+            "yardage": 358,
+            "strokeIndex": 15
+          },
+          {
+            "holeNumber": 8,
+            "par": 4,
+            "yardage": 270,
+            "strokeIndex": 11
+          },
+          {
+            "holeNumber": 9,
+            "par": 4,
+            "yardage": 335,
+            "strokeIndex": 2
+          }
+        ]
+      },
+      "back": {
+        "label": "Gold - Back 9",
+        "holes": [
+          {
+            "holeNumber": 1,
+            "par": 4,
+            "yardage": 263,
+            "strokeIndex": 18
+          },
+          {
+            "holeNumber": 2,
+            "par": 3,
+            "yardage": 125,
+            "strokeIndex": 10
+          },
+          {
+            "holeNumber": 3,
+            "par": 4,
+            "yardage": 286,
+            "strokeIndex": 9
+          },
+          {
+            "holeNumber": 4,
+            "par": 4,
+            "yardage": 348,
+            "strokeIndex": 12
+          },
+          {
+            "holeNumber": 5,
+            "par": 3,
+            "yardage": 100,
+            "strokeIndex": 3
+          },
+          {
+            "holeNumber": 6,
+            "par": 5,
+            "yardage": 335,
+            "strokeIndex": 13
+          },
+          {
+            "holeNumber": 7,
+            "par": 4,
+            "yardage": 410,
+            "strokeIndex": 5
+          },
+          {
+            "holeNumber": 8,
+            "par": 5,
+            "yardage": 300,
+            "strokeIndex": 4
+          },
+          {
+            "holeNumber": 9,
+            "par": 4,
+            "yardage": 377,
+            "strokeIndex": 14
+          }
+        ]
+      }
+    }
+  },
+  "players": [
+    {
+      "id": "jeff-aiken",
+      "name": "JEFF AIKEN",
+      "flight": "A",
+      "teamId": "team-1",
+      "isSenior": true,
+      "priorSeasonScores": [
+        37,
+        41,
+        35,
+        43,
+        45,
+        39,
+        39
+      ]
+    },
+    {
+      "id": "jim-kelly",
+      "name": "JIM KELLY",
+      "flight": "B",
+      "teamId": "team-1",
+      "isSenior": false,
+      "priorSeasonScores": [
+        36,
+        41,
+        45,
+        49,
+        43,
+        43,
+        42
+      ]
+    },
+    {
+      "id": "adam-fisher",
+      "name": "ADAM FISHER",
+      "flight": "C",
+      "teamId": "team-1",
+      "isSenior": false,
+      "priorSeasonScores": []
+    },
+    {
+      "id": "erv-sullivan",
+      "name": "ERV SULLIVAN",
+      "flight": "D",
+      "teamId": "team-1",
+      "isSenior": true,
+      "priorSeasonScores": [
+        60,
+        56,
+        54,
+        54,
+        53,
+        55,
+        51
+      ]
+    },
+    {
+      "id": "jim-shankel",
+      "name": "JIM SHANKEL",
+      "flight": "A",
+      "teamId": "team-2",
+      "isSenior": true,
+      "priorSeasonScores": [
+        39,
+        42,
+        38,
+        42,
+        41,
+        37,
+        38
+      ]
+    },
+    {
+      "id": "tom-ehrenberger",
+      "name": "TOM EHRENBERGER",
+      "flight": "B",
+      "teamId": "team-2",
+      "isSenior": false,
+      "priorSeasonScores": [
+        45,
+        45,
+        47,
+        45,
+        41,
+        42,
+        39
+      ]
+    },
+    {
+      "id": "john-watts",
+      "name": "JOHN WATTS",
+      "flight": "C",
+      "teamId": "team-2",
+      "isSenior": false,
+      "priorSeasonScores": []
+    },
+    {
+      "id": "george-schurer",
+      "name": "GEORGE SCHURER",
+      "flight": "D",
+      "teamId": "team-2",
+      "isSenior": true,
+      "priorSeasonScores": [
+        56,
+        56,
+        55,
+        50,
+        54,
+        54,
+        50
+      ]
+    },
+    {
+      "id": "craig-pelat",
+      "name": "CRAIG PELAT",
+      "flight": "A",
+      "teamId": "team-3",
+      "isSenior": true,
+      "priorSeasonScores": [
+        44,
+        45,
+        39,
+        46,
+        41,
+        37,
+        37
+      ]
+    },
+    {
+      "id": "bill-jacobs",
+      "name": "BILL JACOBS",
+      "flight": "B",
+      "teamId": "team-3",
+      "isSenior": true,
+      "priorSeasonScores": [
+        42,
+        46,
+        45,
+        41,
+        46,
+        44,
+        41
+      ]
+    },
+    {
+      "id": "ed-stefanowicz",
+      "name": "ED STEFANOWICZ",
+      "flight": "C",
+      "teamId": "team-3",
+      "isSenior": false,
+      "priorSeasonScores": [
+        48,
+        50,
+        45,
+        43,
+        47,
+        45,
+        42
+      ]
+    },
+    {
+      "id": "george-trusik",
+      "name": "GEORGE TRUSIK",
+      "flight": "D",
+      "teamId": "team-3",
+      "isSenior": true,
+      "priorSeasonScores": [
+        52,
+        51,
+        48,
+        49,
+        50,
+        48,
+        49
+      ]
+    },
+    {
+      "id": "jeff-bastin",
+      "name": "JEFF BASTIN",
+      "flight": "A",
+      "teamId": "team-4",
+      "isSenior": false,
+      "priorSeasonScores": [
+        43,
+        38,
+        35,
+        40,
+        39,
+        39,
+        40
+      ]
+    },
+    {
+      "id": "scott-shankel",
+      "name": "SCOTT SHANKEL",
+      "flight": "B",
+      "teamId": "team-4",
+      "isSenior": false,
+      "priorSeasonScores": [
+        45,
+        45,
+        47,
+        43,
+        40,
+        44,
+        41
+      ]
+    },
+    {
+      "id": "dave-moran",
+      "name": "DAVE MORAN",
+      "flight": "C",
+      "teamId": "team-4",
+      "isSenior": false,
+      "priorSeasonScores": [
+        46,
+        45,
+        44,
+        45,
+        45,
+        48,
+        47
+      ]
+    },
+    {
+      "id": "steve-piotrowski",
+      "name": "STEVE PIOTROWSKI",
+      "flight": "D",
+      "teamId": "team-4",
+      "isSenior": true,
+      "priorSeasonScores": [
+        47,
+        54,
+        57,
+        55,
+        57,
+        51,
+        46
+      ]
+    },
+    {
+      "id": "mick-pappas",
+      "name": "MICK PAPPAS",
+      "flight": "A",
+      "teamId": "team-5",
+      "isSenior": true,
+      "priorSeasonScores": [
+        39,
+        42,
+        42,
+        36,
+        38,
+        41,
+        41
+      ]
+    },
+    {
+      "id": "denny-notareschi",
+      "name": "DENNY NOTARESCHI",
+      "flight": "B",
+      "teamId": "team-5",
+      "isSenior": true,
+      "priorSeasonScores": [
+        45,
+        41,
+        47,
+        44,
+        47,
+        47,
+        39
+      ]
+    },
+    {
+      "id": "bill-leja",
+      "name": "BILL LEJA",
+      "flight": "C",
+      "teamId": "team-5",
+      "isSenior": true,
+      "priorSeasonScores": [
+        43,
+        43,
+        47,
+        41,
+        39,
+        45,
+        41
+      ],
+      "handicapOverride": {
+        "value": 9,
+        "active": true
+      }
+    },
+    {
+      "id": "gerry-beglinger",
+      "name": "GERRY BEGLINGER",
+      "flight": "D",
+      "teamId": "team-5",
+      "isSenior": false,
+      "priorSeasonScores": [
+        51,
+        50,
+        50,
+        50,
+        43,
+        50,
+        48
+      ]
+    },
+    {
+      "id": "bill-schneider",
+      "name": "BILL SCHNEIDER",
+      "flight": "A",
+      "teamId": "team-6",
+      "isSenior": true,
+      "priorSeasonScores": [
+        43,
+        39,
+        44,
+        46,
+        40,
+        44,
+        42
+      ]
+    },
+    {
+      "id": "bill-ross",
+      "name": "BILL ROSS",
+      "flight": "B",
+      "teamId": "team-6",
+      "isSenior": true,
+      "priorSeasonScores": [
+        41,
+        43,
+        47,
+        49,
+        40,
+        44,
+        39
+      ]
+    },
+    {
+      "id": "mike-sullivan",
+      "name": "MIKE SULLIVAN",
+      "flight": "C",
+      "teamId": "team-6",
+      "isSenior": false,
+      "priorSeasonScores": [
+        44,
+        41,
+        45,
+        50,
+        50,
+        52,
+        51
+      ]
+    },
+    {
+      "id": "harry-wilson",
+      "name": "HARRY WILSON",
+      "flight": "D",
+      "teamId": "team-6",
+      "isSenior": true,
+      "priorSeasonScores": [
+        53,
+        46,
+        53,
+        47,
+        54,
+        46,
+        49
+      ]
+    },
+    {
+      "id": "bill-semler",
+      "name": "BILL SEMLER",
+      "flight": "A",
+      "teamId": "team-7",
+      "isSenior": true,
+      "priorSeasonScores": [
+        38,
+        45,
+        38,
+        43,
+        40,
+        40,
+        40
+      ]
+    },
+    {
+      "id": "john-defilippo",
+      "name": "JOHN DEFILIPPO",
+      "flight": "B",
+      "teamId": "team-7",
+      "isSenior": true,
+      "priorSeasonScores": [
+        43,
+        49,
+        43,
+        42,
+        42,
+        43,
+        44
+      ]
+    },
+    {
+      "id": "john-sleighter",
+      "name": "JOHN SLEIGHTER",
+      "flight": "C",
+      "teamId": "team-7",
+      "isSenior": true,
+      "priorSeasonScores": [
+        44,
+        45,
+        45,
+        45,
+        45,
+        44,
+        46
+      ]
+    },
+    {
+      "id": "tom-mcgaughey",
+      "name": "TOM MCGAUGHEY",
+      "flight": "D",
+      "teamId": "team-7",
+      "isSenior": true,
+      "priorSeasonScores": [
+        48,
+        50,
+        48,
+        46,
+        50,
+        46,
+        46
+      ]
+    },
+    {
+      "id": "bob-bartley",
+      "name": "BOB BARTLEY",
+      "flight": "A",
+      "teamId": "team-8",
+      "isSenior": true,
+      "priorSeasonScores": [
+        41,
+        39,
+        40,
+        44,
+        42,
+        41,
+        45
+      ]
+    },
+    {
+      "id": "jim-boyd",
+      "name": "JIM BOYD",
+      "flight": "B",
+      "teamId": "team-8",
+      "isSenior": false,
+      "priorSeasonScores": [
+        42,
+        47,
+        41,
+        49,
+        40,
+        48,
+        49
+      ]
+    },
+    {
+      "id": "justin-gray",
+      "name": "JUSTIN GRAY",
+      "flight": "C",
+      "teamId": "team-8",
+      "isSenior": false,
+      "priorSeasonScores": [
+        47,
+        44,
+        44,
+        40,
+        45,
+        46,
+        45
+      ]
+    },
+    {
+      "id": "ryan-patsko",
+      "name": "RYAN PATSKO",
+      "flight": "D",
+      "teamId": "team-8",
+      "isSenior": false,
+      "priorSeasonScores": [
+        45,
+        51,
+        47,
+        48,
+        46,
+        45,
+        53
+      ]
+    }
+  ],
+  "teams": [
+    {
+      "id": "team-1",
+      "name": "Team 1",
+      "playerIds": [
+        "jeff-aiken",
+        "jim-kelly",
+        "adam-fisher",
+        "erv-sullivan"
+      ]
+    },
+    {
+      "id": "team-2",
+      "name": "Team 2",
+      "playerIds": [
+        "jim-shankel",
+        "tom-ehrenberger",
+        "john-watts",
+        "george-schurer"
+      ]
+    },
+    {
+      "id": "team-3",
+      "name": "Team 3",
+      "playerIds": [
+        "craig-pelat",
+        "bill-jacobs",
+        "ed-stefanowicz",
+        "george-trusik"
+      ]
+    },
+    {
+      "id": "team-4",
+      "name": "Team 4",
+      "playerIds": [
+        "jeff-bastin",
+        "scott-shankel",
+        "dave-moran",
+        "steve-piotrowski"
+      ]
+    },
+    {
+      "id": "team-5",
+      "name": "Team 5",
+      "playerIds": [
+        "mick-pappas",
+        "denny-notareschi",
+        "bill-leja",
+        "gerry-beglinger"
+      ]
+    },
+    {
+      "id": "team-6",
+      "name": "Team 6",
+      "playerIds": [
+        "bill-schneider",
+        "bill-ross",
+        "mike-sullivan",
+        "harry-wilson"
+      ]
+    },
+    {
+      "id": "team-7",
+      "name": "Team 7",
+      "playerIds": [
+        "bill-semler",
+        "john-defilippo",
+        "john-sleighter",
+        "tom-mcgaughey"
+      ]
+    },
+    {
+      "id": "team-8",
+      "name": "Team 8",
+      "playerIds": [
+        "bob-bartley",
+        "jim-boyd",
+        "justin-gray",
+        "ryan-patsko"
+      ]
+    }
+  ],
+  "schedule": [
+    {
+      "date": "2026-04-16",
+      "leagueWeekNumber": 1,
+      "nine": "back"
+    },
+    {
+      "date": "2026-04-23",
+      "leagueWeekNumber": 2,
+      "nine": "front"
+    },
+    {
+      "date": "2026-04-30",
+      "leagueWeekNumber": 3,
+      "nine": "back"
+    },
+    {
+      "date": "2026-05-07",
+      "leagueWeekNumber": 4,
+      "nine": "front"
+    },
+    {
+      "date": "2026-05-14",
+      "leagueWeekNumber": 5,
+      "nine": "back"
+    },
+    {
+      "date": "2026-05-21",
+      "leagueWeekNumber": 6,
+      "nine": "front"
+    },
+    {
+      "date": "2026-05-28",
+      "leagueWeekNumber": 7,
+      "nine": "back"
+    },
+    {
+      "date": "2026-06-04",
+      "leagueWeekNumber": 8,
+      "nine": "front"
+    },
+    {
+      "date": "2026-06-11",
+      "leagueWeekNumber": 9,
+      "nine": "back"
+    },
+    {
+      "date": "2026-06-18",
+      "leagueWeekNumber": 10,
+      "nine": "front"
+    },
+    {
+      "date": "2026-06-25",
+      "leagueWeekNumber": 11,
+      "nine": "back"
+    },
+    {
+      "date": "2026-07-02",
+      "leagueWeekNumber": 12,
+      "nine": "front"
+    },
+    {
+      "date": "2026-07-09",
+      "leagueWeekNumber": 13,
+      "nine": "back"
+    },
+    {
+      "date": "2026-07-16",
+      "leagueWeekNumber": 14,
+      "nine": "front"
+    },
+    {
+      "date": "2026-07-23",
+      "leagueWeekNumber": 15,
+      "nine": "back"
+    },
+    {
+      "date": "2026-07-30",
+      "leagueWeekNumber": 16,
+      "nine": "front"
+    },
+    {
+      "date": "2026-08-06",
+      "leagueWeekNumber": 17,
+      "nine": "back"
+    },
+    {
+      "date": "2026-08-13",
+      "leagueWeekNumber": 18,
+      "nine": "front"
+    },
+    {
+      "date": "2026-08-20",
+      "leagueWeekNumber": 19,
+      "nine": "back",
+      "label": "Playoffs"
+    }
+  ],
+  "weeklyScores": {}
+}

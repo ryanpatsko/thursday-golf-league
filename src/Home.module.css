@@ -855,6 +855,10 @@
   font-weight: 600;
 }
 
+.weeklyGrsCell {
+  min-width: 3.1rem;
+}
+
 .weeklyTdNum {
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -1191,6 +1195,15 @@
   text-align: center !important;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
+}
+
+.handicapsOverrideStar {
+  margin-left: 0.06rem;
+  font-weight: 700;
+  color: var(--gold);
+  vertical-align: super;
+  font-size: 0.72em;
+  line-height: 0;
 }
 
 .handicapsNumTh {

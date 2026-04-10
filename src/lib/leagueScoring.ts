@@ -1,10 +1,10 @@
 import type { LeagueData, Player, Team } from '../data/leagueTypes'
 import {
-  computeHandicapIndex,
   getNineForWeek,
   grossTotalFromHoles,
   handicapTotalFromHoles,
   netNineFromGrossAndIndex,
+  playerHandicapIndexAtWeek,
   sumPars,
 } from './handicap'
 import { leagueWeeksInHalfThrough } from './scheduleWeek'
@@ -30,11 +30,7 @@ export function playerNetForWeek(data: LeagueData, player: Player, week: number)
   const row = data.weeklyScores[player.id]?.[String(week)]
   const gross = grossTotalFromHoles(row)
   const hist = handicapTotalsBeforeWeek(data, player, week)
-  const idx = computeHandicapIndex({
-    priorSeasonScores: player.priorSeasonScores,
-    currentSeasonTotals: hist,
-    asOfLeagueWeek: week,
-  })
+  const idx = playerHandicapIndexAtWeek(player, hist, week)
   return netNineFromGrossAndIndex(gross, idx)
 }
 

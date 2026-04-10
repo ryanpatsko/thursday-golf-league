@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CourseNine, FlightId, LeagueData, Player, WeeklyScoreRow } from './data/leagueTypes'
-import { computeHandicapIndex, formatHandicapIndex, getNineForWeek, grossTotalFromHoles, netNineFromGrossAndIndex } from './lib/handicap'
+import {
+  formatGrossRecordedVsHandicap,
+  formatHandicapIndex,
+  getNineForWeek,
+  grossTotalFromHoles,
+  handicapTotalFromHoles,
+  netNineFromGrossAndIndex,
+  playerHandicapIndexAtWeek,
+} from './lib/handicap'
 import { holeScoreBadgeClassName } from './lib/holeScoreDisplay'
 import {
   flightPointsForWeek,
@@ -29,6 +37,7 @@ type WeeklyRow = {
   scoreRow: WeeklyScoreRow | undefined
   nine: CourseNine
   gross: number | null
+  handicapGross: number | null
   net: number | null
   hcp: number | null
   flightPts: number | null
@@ -138,20 +147,15 @@ export default function WeeklyScoresTab({
       const scoreRow = data.weeklyScores[p.id]?.[String(selectedWeek)]
       const nine = getNineForWeek(data.course, scheduledNine, p)
       const gross = grossTotalFromHoles(scoreRow)
+      const handicapGross =
+        scoreRow && scoreRow.holes?.length ? handicapTotalFromHoles(scoreRow, nine.holes) : null
       const handicapHistory = handicapTotalsBeforeWeek(data, p, selectedWeek)
-      const hcp =
-        gross != null
-          ? computeHandicapIndex({
-              priorSeasonScores: p.priorSeasonScores,
-              currentSeasonTotals: handicapHistory,
-              asOfLeagueWeek: selectedWeek,
-            })
-          : null
+      const hcp = playerHandicapIndexAtWeek(p, handicapHistory, selectedWeek)
       const net = netNineFromGrossAndIndex(gross, hcp)
       const holeScores = nine.holes.map((_, i) => scoreRow?.holes[i] ?? null)
       const flightPts =
         gross != null && !scoreRow?.pulledGross ? (ptsByFlight[p.flight].get(p.id) ?? 0) : null
-      return { player: p, scoreRow, nine, gross, net, hcp, flightPts, holeScores }
+      return { player: p, scoreRow, nine, gross, handicapGross, net, hcp, flightPts, holeScores }
     })
   }, [data, selectedWeek, sched, scheduledNine])
 
@@ -279,6 +283,7 @@ export default function WeeklyScoresTab({
                     rowSpan={2}
                     scope="col"
                     className={`${styles.weeklyThNum} ${styles.weeklyThSep}`}
+                    title="Recorded 9-hole total; when shown as two numbers, second is handicap gross (each hole capped at double bogey)."
                     aria-sort={
                       sortKey === 'gross' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'
                     }
@@ -338,7 +343,13 @@ export default function WeeklyScoresTab({
                 </tr>
               </thead>
               <tbody>
-                {displayRows.map(({ player: p, scoreRow: row, nine, gross, net, hcp: idx, flightPts }) => (
+                {displayRows.map(({ player: p, scoreRow: row, nine, gross, handicapGross, net, hcp: idx, flightPts }) => {
+                  const grsDisplay = formatGrossRecordedVsHandicap(gross, handicapGross)
+                  const grsTitle =
+                    gross != null && handicapGross != null && gross !== handicapGross
+                      ? `${gross} recorded / ${handicapGross} handicap gross (max +2 strokes vs par per hole)`
+                      : undefined
+                  return (
                   <tr key={p.id}>
                     <td className={styles.weeklyStickyCol}>
                       <div className={styles.weeklyPlayerCell}>
@@ -373,8 +384,11 @@ export default function WeeklyScoresTab({
                         </td>
                       )
                     })}
-                    <td className={`${styles.weeklyTdNum} ${styles.weeklyThSep}`}>
-                      {gross == null ? '—' : gross}
+                    <td
+                      className={`${styles.weeklyTdNum} ${styles.weeklyThSep} ${styles.weeklyGrsCell}`}
+                      title={grsTitle}
+                    >
+                      {grsDisplay}
                     </td>
                     <td className={`${styles.weeklyTdNum} ${styles.weeklyThSepLeft}`}>
                       {net == null ? '—' : net}
@@ -384,7 +398,8 @@ export default function WeeklyScoresTab({
                       {flightPts == null ? '—' : formatStandingPoints(flightPts)}
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

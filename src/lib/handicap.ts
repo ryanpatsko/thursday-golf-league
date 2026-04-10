@@ -2,8 +2,9 @@ import type { Course, CourseNine, HoleDef, Player, WeeklyScoreRow } from '../dat
 
 const PAR_9_REFERENCE = 36
 
+/** Max strokes counted per hole toward handicap totals: double bogey (par + 2). */
 export function capStrokesForHandicap(strokes: number, par: number): number {
-  return Math.min(strokes, par + 3)
+  return Math.min(strokes, par + 2)
 }
 
 export function sumPars(nine: CourseNine): number {
@@ -26,6 +27,19 @@ export function handicapTotalFromHoles(
   }
   if (filled !== 9) return null
   return total
+}
+
+/**
+ * GRS column text: recorded 9-hole gross; when it differs from the capped handicap total, `recorded/capped`.
+ */
+export function formatGrossRecordedVsHandicap(
+  recorded: number | null,
+  handicapGross: number | null,
+): string {
+  if (recorded == null) return '—'
+  if (handicapGross == null) return String(recorded)
+  if (recorded === handicapGross) return String(recorded)
+  return `${recorded}/${handicapGross}`
 }
 
 /** True when all nine holes are entered (not a pull / not incomplete). */
@@ -112,9 +126,75 @@ export function computeHandicapIndex(args: {
   return Math.round(raw)
 }
 
+/**
+ * Parsed admin override value when `active` is strictly on and `value` is a finite number
+ * (coerces string/number from JSON).
+ */
+export function effectiveHandicapOverrideValue(
+  player: Pick<Player, 'handicapOverride'>,
+): number | null {
+  const h = player.handicapOverride
+  if (h == null || h.active !== true) return null
+  const v = typeof h.value === 'number' ? h.value : Number(h.value)
+  if (!Number.isFinite(v)) return null
+  return v
+}
+
+/** True when an admin handicap override is on for this player. */
+export function isHandicapOverrideActive(
+  player: Pick<Player, 'handicapOverride'>,
+): boolean {
+  return effectiveHandicapOverrideValue(player) != null
+}
+
+/**
+ * Whole-number 9-hole handicap index for net scoring: uses admin override when active,
+ * otherwise {@link computeHandicapIndex}.
+ */
+export function playerHandicapIndexAtWeek(
+  player: Player,
+  currentSeasonTotals: number[],
+  asOfLeagueWeek: number,
+): number | null {
+  const o = effectiveHandicapOverrideValue(player)
+  if (o != null) {
+    return Math.round(o)
+  }
+  return computeHandicapIndex({
+    priorSeasonScores: player.priorSeasonScores,
+    currentSeasonTotals,
+    asOfLeagueWeek,
+  })
+}
+
+/**
+ * Unrounded index for Handicaps tab (formula one decimal). Override returns the stored numeric value.
+ */
+export function playerHandicapIndexUnroundedAtWeek(
+  player: Player,
+  currentSeasonTotals: number[],
+  asOfLeagueWeek: number,
+): number | null {
+  const o = effectiveHandicapOverrideValue(player)
+  if (o != null) {
+    return o
+  }
+  return computeHandicapIndexUnrounded({
+    priorSeasonScores: player.priorSeasonScores,
+    currentSeasonTotals,
+    asOfLeagueWeek,
+  })
+}
+
 export function formatHandicapIndex(n: number | null): string {
   if (n == null) return '—'
   return String(Math.round(n))
+}
+
+/** One-decimal display for formula-based index (Handicaps tab when not using override). */
+export function formatHandicapIndexOneDecimal(n: number | null): string {
+  if (n == null) return '—'
+  return (Math.round(n * 10) / 10).toFixed(1)
 }
 
 /** 9-hole net total: gross minus whole-number handicap index from {@link computeHandicapIndex}. */

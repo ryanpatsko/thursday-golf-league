@@ -146,6 +146,13 @@ function validatePlayer(p) {
   for (const s of p.priorSeasonScores) {
     if (typeof s !== 'number' || !Number.isFinite(s) || s < 20 || s > 120) return false
   }
+  if (p.handicapOverride != null) {
+    const ho = p.handicapOverride
+    if (typeof ho !== 'object' || ho === null) return false
+    if (typeof ho.active !== 'boolean') return false
+    if (typeof ho.value !== 'number' || !Number.isFinite(ho.value)) return false
+    if (ho.active && (ho.value < -10 || ho.value > 60)) return false
+  }
   return true
 }
 
@@ -350,14 +357,23 @@ export async function handler(event) {
         weeksPerHalf: Math.floor(body.meta.weeksPerHalf),
         totalWeeks: Math.floor(body.meta.totalWeeks),
       },
-      players: body.players.map((p) => ({
-        id: p.id,
-        name: String(p.name).trim(),
-        flight: p.flight,
-        teamId: p.teamId,
-        isSenior: Boolean(p.isSenior),
-        priorSeasonScores: p.priorSeasonScores.map(Number),
-      })),
+      players: body.players.map((p) => {
+        const row = {
+          id: p.id,
+          name: String(p.name).trim(),
+          flight: p.flight,
+          teamId: p.teamId,
+          isSenior: Boolean(p.isSenior),
+          priorSeasonScores: p.priorSeasonScores.map(Number),
+        }
+        if (p.handicapOverride != null && typeof p.handicapOverride === 'object') {
+          row.handicapOverride = {
+            active: Boolean(p.handicapOverride.active),
+            value: Number(p.handicapOverride.value),
+          }
+        }
+        return row
+      }),
       teams: body.teams.map((t) => ({
         id: t.id,
         name: String(t.name).trim(),

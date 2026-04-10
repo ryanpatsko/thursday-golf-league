@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { LeagueData, Player, WeeklyScoreRow } from '../data/leagueTypes'
 import {
-  computeHandicapIndex,
+  playerHandicapIndexAtWeek,
   formatHandicapIndex,
   getNineForWeek,
   grossTotalFromHoles,
@@ -12,7 +12,7 @@ import {
 import { holeScoreBadgeClassName } from '../lib/holeScoreDisplay'
 import { flightPointsForWeek, formatStandingPoints } from '../lib/leagueScoring'
 import { formatIsoDateForDisplay } from '../lib/formatIsoDateDisplay'
-import { displayHoleNumberOnNine } from '../lib/scheduleWeek'
+import { displayHoleNumberOnNine, weekNumbersInOrder, weekSelectLabel } from '../lib/scheduleWeek'
 import styles from './editors.module.css'
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
@@ -90,6 +90,18 @@ function commitWeekScores(
   return { ...data, weeklyScores: nextScores }
 }
 
+function clearWeekScores(data: LeagueData, playerId: string, week: number): LeagueData {
+  const nextScores = { ...data.weeklyScores }
+  const byWeek = { ...(nextScores[playerId] ?? {}) }
+  const { [String(week)]: _, ...rest } = byWeek
+  if (Object.keys(rest).length === 0) {
+    const { [playerId]: __, ...scoresRest } = nextScores
+    return { ...data, weeklyScores: scoresRest }
+  }
+  nextScores[playerId] = rest
+  return { ...data, weeklyScores: nextScores }
+}
+
 function commitPulledWeek(
   data: LeagueData,
   playerId: string,
@@ -117,6 +129,7 @@ function ScoreEntryModal({
   scheduledNine,
   onSave,
   onSavePull,
+  onClear,
   onClose,
 }: {
   data: LeagueData
@@ -130,6 +143,7 @@ function ScoreEntryModal({
   onSavePull: (args: { pulledGross: number; pulledFromPlayerName: string }) => Promise<
     { ok: true } | { ok: false; message: string }
   >
+  onClear: () => Promise<{ ok: true } | { ok: false; message: string }>
   onClose: () => void
 }) {
   const existing = data.weeklyScores[player.id]?.[String(selectedWeek)]
@@ -144,6 +158,8 @@ function ScoreEntryModal({
   const [pullSaving, setPullSaving] = useState(false)
   const [pullSaveError, setPullSaveError] = useState<string | null>(null)
   const playerNine = getNineForWeek(data.course, scheduledNine, player)
+
+  const hasSavedWeek = Boolean(data.weeklyScores[player.id]?.[String(selectedWeek)])
 
   const flightPeers = useMemo(() => {
     return data.players
@@ -270,7 +286,7 @@ function ScoreEntryModal({
             </ul>
             {!canPullFromPool ? (
               <p className={styles.scoresModalPullHint}>
-                No fully posted rounds in this flight for this week yet. Enter peers&apos; hole scores first, then pull.
+                No fully posted rounds in this flight for this week yet.
               </p>
             ) : null}
             {pullPhase === 'drawing' ? (
@@ -476,6 +492,32 @@ function ScoreEntryModal({
               </button>
               <button
                 type="button"
+                className={styles.scoresModalClearBtn}
+                disabled={saving || !hasSavedWeek}
+                title={
+                  hasSavedWeek
+                    ? 'Remove all scores for this player and week from the league file.'
+                    : 'Nothing saved for this week yet.'
+                }
+                onClick={() => {
+                  void (async () => {
+                    if (saving || !hasSavedWeek) return
+                    setSaveError(null)
+                    setSaving(true)
+                    try {
+                      const r = await onClear()
+                      if (r.ok) onClose()
+                      else setSaveError(r.message)
+                    } finally {
+                      setSaving(false)
+                    }
+                  })()
+                }}
+              >
+                Clear scorecard
+              </button>
+              <button
+                type="button"
                 className={styles.btnPrimary}
                 disabled={!canSave || saving}
                 title={
@@ -528,7 +570,7 @@ export default function ScoresEditor({
   setSaveMsg: (msg: string | null) => void
 }) {
   const sched = data.schedule.find((s) => s.leagueWeekNumber === selectedWeek)
-  const weekKeys = [...new Set(data.schedule.map((s) => s.leagueWeekNumber))].sort((a, b) => a - b)
+  const weekKeys = weekNumbersInOrder(data)
 
   const players = [...data.players].sort((a, b) => a.name.localeCompare(b.name))
 
@@ -562,10 +604,7 @@ export default function ScoresEditor({
           >
             {weekKeys.map((w) => (
               <option key={w} value={w}>
-                Week {w}
-                {data.schedule.find((s) => s.leagueWeekNumber === w)
-                  ? ` · ${data.schedule.find((s) => s.leagueWeekNumber === w)?.date}`
-                  : ''}
+                {weekSelectLabel(data, w)}
               </option>
             ))}
           </select>
@@ -614,14 +653,7 @@ export default function ScoresEditor({
                 const nine = getNineForWeek(data.course, scheduledNine, p)
                 const gross = grossTotalFromHoles(row)
                 const handicapHistory = totalsBeforeWeek(data, p, selectedWeek)
-                const idx =
-                  gross != null
-                    ? computeHandicapIndex({
-                        priorSeasonScores: p.priorSeasonScores,
-                        currentSeasonTotals: handicapHistory,
-                        asOfLeagueWeek: selectedWeek,
-                      })
-                    : null
+                const idx = playerHandicapIndexAtWeek(p, handicapHistory, selectedWeek)
                 const net = netNineFromGrossAndIndex(gross, idx)
                 const flpts =
                   gross != null && !row?.pulledGross
@@ -712,6 +744,14 @@ export default function ScoresEditor({
             )
             const r = await persistLeague(next)
             if (r.ok) setSaveMsg('Saved pulled score.')
+            else setSaveMsg(r.message)
+            return r
+          }}
+          onClear={async () => {
+            setSaveMsg(null)
+            const next = clearWeekScores(data, editingPlayer.id, selectedWeek)
+            const r = await persistLeague(next)
+            if (r.ok) setSaveMsg('Scorecard cleared.')
             else setSaveMsg(r.message)
             return r
           }}

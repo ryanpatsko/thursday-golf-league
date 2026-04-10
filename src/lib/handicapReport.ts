@@ -1,9 +1,10 @@
 import type { LeagueData, Player } from '../data/leagueTypes'
 import {
-  computeHandicapIndex,
-  computeHandicapIndexUnrounded,
   getNineForWeek,
   handicapTotalFromHoles,
+  isHandicapOverrideActive,
+  playerHandicapIndexAtWeek,
+  playerHandicapIndexUnroundedAtWeek,
 } from './handicap'
 
 /** League-week columns on the Handicaps grid. */
@@ -59,6 +60,8 @@ export function handicapBreakdownForPlayer(
   handicapIndex: number | null
   /** Same pool as {@link handicapIndex}, but `(avg−36)×0.8` before rounding (e.g. for display). */
   handicapIndexUnrounded: number | null
+  /** When true, handicap index columns come from admin override, not the rolling pool. */
+  handicapUsesOverride: boolean
   priorColumns: (number | null)[]
   /** role per prior column index 0..6 (weeks 12..18) */
   priorRoles: HandicapCellRole[]
@@ -75,16 +78,9 @@ export function handicapBreakdownForPlayer(
   }
   const curTotals = curEntries.map((e) => e.total)
 
-  const handicapIndexUnrounded = computeHandicapIndexUnrounded({
-    priorSeasonScores: priors,
-    currentSeasonTotals: curTotals,
-    asOfLeagueWeek,
-  })
-  const handicapIndex = computeHandicapIndex({
-    priorSeasonScores: priors,
-    currentSeasonTotals: curTotals,
-    asOfLeagueWeek,
-  })
+  const handicapUsesOverride = isHandicapOverrideActive(player)
+  const handicapIndexUnrounded = playerHandicapIndexUnroundedAtWeek(player, curTotals, asOfLeagueWeek)
+  const handicapIndex = playerHandicapIndexAtWeek(player, curTotals, asOfLeagueWeek)
 
   const priorColumns = priorSeasonColumnValues(priors)
 
@@ -119,6 +115,7 @@ export function handicapBreakdownForPlayer(
     return {
       handicapIndex,
       handicapIndexUnrounded,
+      handicapUsesOverride,
       priorColumns,
       priorRoles,
       weekRoles,
@@ -152,6 +149,7 @@ export function handicapBreakdownForPlayer(
   return {
     handicapIndex,
     handicapIndexUnrounded,
+    handicapUsesOverride,
     priorColumns,
     priorRoles,
     weekRoles,

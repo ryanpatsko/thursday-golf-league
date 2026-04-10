@@ -7,6 +7,7 @@ import {
   handicapBreakdownForPlayer,
   priorSeasonHeaderInRollingBand,
 } from './lib/handicapReport'
+import { formatHandicapIndex, formatHandicapIndexOneDecimal } from './lib/handicap'
 import { weekNumbersInOrder, weekSelectLabel } from './lib/scheduleWeek'
 import { PlayerNameWithSenior } from './PlayerNameWithSenior.tsx'
 import styles from './Home.module.css'
@@ -21,11 +22,6 @@ function compareTeamsByLeagueNumber(a: Team, b: Team): number {
   if (ma) return -1
   if (mb) return 1
   return a.name.localeCompare(b.name)
-}
-
-function formatHandicapOneDecimal(n: number | null): string {
-  if (n == null) return '—'
-  return n.toFixed(1)
 }
 
 function roleClass(role: HandicapCellRole): string {
@@ -106,7 +102,7 @@ export default function HandicapsTab({
               <th className={styles.handicapsFlightCol}>Fl</th>
               <th
                 className={styles.handicapsHcpCol}
-                title="Shown: (avg − 36) × 0.8 using the middle five of your last seven qualifying totals, one decimal (not pre-rounded). Net scoring uses the same formula rounded to a whole number."
+                title="(avg − 36) × 0.8 from the middle five of your last seven qualifying totals (one decimal). Net uses the rounded whole number. Admins can set an active override per player on the Rosters screen instead."
               >
                 HCP
               </th>
@@ -154,8 +150,20 @@ export default function HandicapsTab({
                         <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
                       </td>
                       <td className={`${styles.handicapsFlightCol} ${styles.handicapsTdFlight}`}>{p.flight}</td>
-                      <td className={`${styles.handicapsHcpCol} ${styles.handicapsTdHcp}`}>
-                        {formatHandicapOneDecimal(b.handicapIndexUnrounded)}
+                      <td
+                        className={`${styles.handicapsHcpCol} ${styles.handicapsTdHcp}`}
+                        title={b.handicapUsesOverride ? 'Admin override applied' : undefined}
+                      >
+                        {b.handicapUsesOverride ? (
+                          <>
+                            {formatHandicapIndex(b.handicapIndex)}
+                            <span className={styles.handicapsOverrideStar} aria-hidden>
+                              *
+                            </span>
+                          </>
+                        ) : (
+                          formatHandicapIndexOneDecimal(b.handicapIndexUnrounded)
+                        )}
                       </td>
                       {b.priorColumns.map((val, i) => (
                         <td

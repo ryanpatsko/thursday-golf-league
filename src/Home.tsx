@@ -127,7 +127,7 @@ export default function Home() {
             ) : null}
             {activeTab === 'four' ? (
               <div role="tabpanel" className={styles.tabPanel}>
-                <p className={styles.placeholder}>Four Man content will be posted here.</p>
+                <p className={styles.placeholder}>Four man rosters and scores will be posted here soon.</p>
               </div>
             ) : null}
           </div>

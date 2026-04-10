@@ -38,6 +38,14 @@ export interface Player {
   isSenior: boolean
   /** Most recent rounds from the prior season (9-hole gross totals). Used for early-season handicap per league rules. */
   priorSeasonScores: number[]
+  /**
+   * When `active`, net scoring and handicap display use this 9-hole index instead of the rolling calculation.
+   * Turn off `active` to resume formula-based index (priors + current season).
+   */
+  handicapOverride?: {
+    value: number
+    active: boolean
+  }
 }
 
 export interface Team {
@@ -72,6 +80,17 @@ export interface WeeklyScoreRow {
 
 export type WeeklyScores = Record<string, Record<string, WeeklyScoreRow>>
 
+/** Persisted admin tee-time draw session (Thursday setup). Not shown on the public site. */
+export type AdminTeeTimesReadyEntry = {
+  playerId: string
+  hasGuest: boolean
+}
+
+export type AdminTeeTimesGroup = {
+  groupIndex: number
+  members: AdminTeeTimesReadyEntry[]
+}
+
 export interface LeagueData {
   version: number
   meta: LeagueMeta
@@ -80,4 +99,9 @@ export interface LeagueData {
   teams: Team[]
   schedule: ScheduleRow[]
   weeklyScores: WeeklyScores
+  /** Ready list and pulled groups for the Tee Times admin tab. */
+  adminTeeTimesSession?: {
+    ready: AdminTeeTimesReadyEntry[]
+    teeGroups: AdminTeeTimesGroup[]
+  }
 }

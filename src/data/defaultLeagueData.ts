@@ -104,96 +104,101 @@ function buildSchedule(startDate: string, totalWeeks: number): ScheduleRow[] {
   return rows
 }
 
-/** Seed rows from 2025 CSV: name, flight after sorting prior averages, seven prior gross totals. */
-const SEED: { name: string; flight: 'A' | 'B' | 'C' | 'D'; prior: number[] }[] = [
-  { name: 'JEFF BASTIN', flight: 'A', prior: [43, 38, 35, 40, 39, 39, 40] },
-  { name: 'JIM SHANKEL', flight: 'A', prior: [39, 42, 38, 42, 41, 37, 38] },
-  { name: 'JEFF AIKEN', flight: 'A', prior: [37, 41, 35, 43, 45, 39, 39] },
-  { name: 'MICK PAPPAS', flight: 'A', prior: [39, 42, 42, 36, 38, 41, 41] },
-  { name: 'BILL SEMLER', flight: 'A', prior: [38, 45, 38, 43, 40, 40, 40] },
-  { name: 'CRAIG PELAT', flight: 'A', prior: [44, 45, 39, 46, 41, 37, 37] },
-  { name: 'JOHN HOUGH', flight: 'A', prior: [41, 41, 41, 46, 43, 42, 40] },
-  { name: 'BRIAN PAPPAS', flight: 'A', prior: [42, 46, 44, 44, 40, 43, 39] },
-  { name: 'BILL SCHNEIDER', flight: 'B', prior: [43, 39, 44, 46, 40, 44, 42] },
-  { name: 'JIM KELLY', flight: 'B', prior: [36, 41, 45, 49, 43, 43, 42] },
-  { name: 'BILL ROSS', flight: 'B', prior: [41, 43, 47, 49, 40, 44, 39] },
-  { name: 'TOM EHRENBERGER', flight: 'B', prior: [45, 45, 47, 45, 41, 42, 39] },
-  { name: 'SCOTT SHANKEL', flight: 'B', prior: [45, 45, 47, 43, 40, 44, 41] },
-  { name: 'BILL JACOBS', flight: 'B', prior: [42, 46, 45, 41, 46, 44, 41] },
-  { name: 'BOB BARTLEY', flight: 'B', prior: [43, 41, 42, 46, 44, 43, 47] },
-  { name: 'JOHN DEFILIPPO', flight: 'B', prior: [43, 49, 43, 42, 42, 43, 44] },
-  { name: 'DENNY NOTARESCHI', flight: 'C', prior: [45, 41, 47, 44, 47, 47, 39] },
-  { name: 'JUSTIN GRAY', flight: 'C', prior: [47, 44, 44, 40, 45, 46, 45] },
-  { name: 'JOHN SLEIGHTER', flight: 'C', prior: [44, 45, 45, 45, 45, 44, 46] },
-  { name: 'JIM BOYD', flight: 'C', prior: [42, 47, 41, 49, 40, 48, 49] },
-  { name: 'ED STEFANOWICZ', flight: 'C', prior: [48, 50, 45, 43, 47, 45, 42] },
-  { name: 'DAVE MORAN', flight: 'C', prior: [46, 45, 44, 45, 45, 48, 47] },
-  { name: 'MIKE SULLIVAN', flight: 'C', prior: [44, 41, 45, 50, 50, 52, 51] },
-  { name: 'TOM MCGAUGHEY', flight: 'C', prior: [48, 50, 48, 46, 50, 46, 46] },
-  { name: 'RYAN PATSKO', flight: 'D', prior: [45, 51, 47, 48, 46, 45, 53] },
-  { name: 'JIM DEFILIPPO', flight: 'D', prior: [46, 51, 48, 52, 51, 48, 43] },
-  { name: 'GERRY BEGLINGER', flight: 'D', prior: [51, 50, 50, 50, 43, 50, 48] },
-  { name: 'BILL MCWILLIAMS', flight: 'D', prior: [52, 48, 48, 47, 51, 49, 52] },
-  { name: 'GEORGE TRUSIK', flight: 'D', prior: [52, 51, 48, 49, 50, 48, 49] },
-  { name: 'HARRY WILSON', flight: 'D', prior: [53, 46, 53, 47, 54, 46, 49] },
-  { name: 'STEVE PIOTROWSKI', flight: 'D', prior: [47, 54, 57, 55, 57, 51, 46] },
-  { name: 'GEORGE SCHURER', flight: 'D', prior: [56, 56, 55, 50, 54, 54, 50] },
+/**
+ * 2026 season roster from league sheet: team, flight, player (* = senior / gold tees),
+ * 2025 last seven gross totals (weeks 12–18), or empty for new players.
+ */
+type RosterRow = {
+  teamName: string
+  flight: 'A' | 'B' | 'C' | 'D'
+  nameRaw: string
+  prior: number[]
+}
+
+const ROSTER_2026: RosterRow[] = [
+  { teamName: 'Team 1', flight: 'A', nameRaw: 'JEFF AIKEN*', prior: [37, 41, 35, 43, 45, 39, 39] },
+  { teamName: 'Team 1', flight: 'B', nameRaw: 'JIM KELLY', prior: [36, 41, 45, 49, 43, 43, 42] },
+  { teamName: 'Team 1', flight: 'C', nameRaw: 'ADAM FISHER', prior: [] },
+  { teamName: 'Team 1', flight: 'D', nameRaw: 'ERV SULLIVAN*', prior: [60, 56, 54, 54, 53, 55, 51] },
+  { teamName: 'Team 2', flight: 'A', nameRaw: 'JIM SHANKEL*', prior: [39, 42, 38, 42, 41, 37, 38] },
+  { teamName: 'Team 2', flight: 'B', nameRaw: 'TOM EHRENBERGER', prior: [45, 45, 47, 45, 41, 42, 39] },
+  { teamName: 'Team 2', flight: 'C', nameRaw: 'JOHN WATTS', prior: [] },
+  { teamName: 'Team 2', flight: 'D', nameRaw: 'GEORGE SCHURER*', prior: [56, 56, 55, 50, 54, 54, 50] },
+  { teamName: 'Team 3', flight: 'A', nameRaw: 'CRAIG PELAT*', prior: [44, 45, 39, 46, 41, 37, 37] },
+  { teamName: 'Team 3', flight: 'B', nameRaw: 'BILL JACOBS*', prior: [42, 46, 45, 41, 46, 44, 41] },
+  { teamName: 'Team 3', flight: 'C', nameRaw: 'ED STEFANOWICZ', prior: [48, 50, 45, 43, 47, 45, 42] },
+  { teamName: 'Team 3', flight: 'D', nameRaw: 'GEORGE TRUSIK*', prior: [52, 51, 48, 49, 50, 48, 49] },
+  { teamName: 'Team 4', flight: 'A', nameRaw: 'JEFF BASTIN', prior: [43, 38, 35, 40, 39, 39, 40] },
+  { teamName: 'Team 4', flight: 'B', nameRaw: 'SCOTT SHANKEL', prior: [45, 45, 47, 43, 40, 44, 41] },
+  { teamName: 'Team 4', flight: 'C', nameRaw: 'DAVE MORAN', prior: [46, 45, 44, 45, 45, 48, 47] },
+  { teamName: 'Team 4', flight: 'D', nameRaw: 'STEVE PIOTROWSKI*', prior: [47, 54, 57, 55, 57, 51, 46] },
+  { teamName: 'Team 5', flight: 'A', nameRaw: 'MICK PAPPAS*', prior: [39, 42, 42, 36, 38, 41, 41] },
+  { teamName: 'Team 5', flight: 'B', nameRaw: 'DENNY NOTARESCHI*', prior: [45, 41, 47, 44, 47, 47, 39] },
+  { teamName: 'Team 5', flight: 'C', nameRaw: 'BILL LEJA*', prior: [43, 43, 47, 41, 39, 45, 41] },
+  { teamName: 'Team 5', flight: 'D', nameRaw: 'GERRY BEGLINGER', prior: [51, 50, 50, 50, 43, 50, 48] },
+  { teamName: 'Team 6', flight: 'A', nameRaw: 'BILL SCHNEIDER*', prior: [43, 39, 44, 46, 40, 44, 42] },
+  { teamName: 'Team 6', flight: 'B', nameRaw: 'BILL ROSS*', prior: [41, 43, 47, 49, 40, 44, 39] },
+  { teamName: 'Team 6', flight: 'C', nameRaw: 'MIKE SULLIVAN', prior: [44, 41, 45, 50, 50, 52, 51] },
+  { teamName: 'Team 6', flight: 'D', nameRaw: 'HARRY WILSON*', prior: [53, 46, 53, 47, 54, 46, 49] },
+  { teamName: 'Team 7', flight: 'A', nameRaw: 'BILL SEMLER*', prior: [38, 45, 38, 43, 40, 40, 40] },
+  { teamName: 'Team 7', flight: 'B', nameRaw: 'JOHN DEFILIPPO*', prior: [43, 49, 43, 42, 42, 43, 44] },
+  { teamName: 'Team 7', flight: 'C', nameRaw: 'JOHN SLEIGHTER*', prior: [44, 45, 45, 45, 45, 44, 46] },
+  { teamName: 'Team 7', flight: 'D', nameRaw: 'TOM MCGAUGHEY*', prior: [48, 50, 48, 46, 50, 46, 46] },
+  { teamName: 'Team 8', flight: 'A', nameRaw: 'BOB BARTLEY*', prior: [41, 39, 40, 44, 42, 41, 45] },
+  { teamName: 'Team 8', flight: 'B', nameRaw: 'JIM BOYD', prior: [42, 47, 41, 49, 40, 48, 49] },
+  { teamName: 'Team 8', flight: 'C', nameRaw: 'JUSTIN GRAY', prior: [47, 44, 44, 40, 45, 46, 45] },
+  { teamName: 'Team 8', flight: 'D', nameRaw: 'RYAN PATSKO', prior: [45, 51, 47, 48, 46, 45, 53] },
 ]
 
 const iso = '2026-04-16'
 
-/** Player ids on Gold (senior) tees — ed-stefanowicz = “Ed S.” on the card. */
-const SENIOR_IDS = new Set([
-  'jeff-aiken',
-  'bill-ross',
-  'george-schurer',
-  'george-trusik',
-  'denny-notareschi',
-  'craig-pelat',
-  'ed-stefanowicz',
-  'bill-jacobs',
-  'harry-wilson',
-  'bill-schneider',
-  'mick-pappas',
-])
+function parseRosterName(raw: string): { name: string; isSenior: boolean } {
+  const trimmed = raw.replace(/\s+/g, ' ').trim()
+  const isSenior = trimmed.endsWith('*')
+  const name = isSenior ? trimmed.slice(0, -1).trim() : trimmed
+  return { name, isSenior }
+}
+
+function rosterPlayerId(row: RosterRow): string {
+  return slugifyName(parseRosterName(row.nameRaw).name)
+}
 
 function buildPlayersAndTeams(): { players: Player[]; teams: Team[] } {
-  const byFlight: Record<'A' | 'B' | 'C' | 'D', typeof SEED> = { A: [], B: [], C: [], D: [] }
-  for (const row of SEED) {
-    byFlight[row.flight].push(row)
-  }
-  const idFor = (row: (typeof SEED)[number]) => slugifyName(row.name)
-  const players: Player[] = SEED.map((row) => {
-    const id = idFor(row)
-    return {
+  const flightOrder: Record<'A' | 'B' | 'C' | 'D', number> = { A: 0, B: 1, C: 2, D: 3 }
+  const players: Player[] = ROSTER_2026.map((row) => {
+    const { name, isSenior } = parseRosterName(row.nameRaw)
+    const id = slugifyName(name)
+    const teamNum = /^Team\s+(\d+)$/i.exec(row.teamName)?.[1] ?? '1'
+    const player: Player = {
       id,
-      name: row.name.replace(/\s+/g, ' ').trim(),
+      name,
       flight: row.flight,
-      teamId: '',
-      isSenior: SENIOR_IDS.has(id),
+      teamId: `team-${teamNum}`,
+      isSenior,
       priorSeasonScores: [...row.prior],
     }
+    if (id === 'bill-leja') {
+      player.handicapOverride = { value: 9, active: true }
+    }
+    return player
   })
-  const byId = new Map(players.map((p) => [p.id, p]))
-  const flightOrder: ('A' | 'B' | 'C' | 'D')[] = ['A', 'B', 'C', 'D']
+
   const teams: Team[] = []
-  for (let i = 0; i < 8; i++) {
-    const tid = `team-${i + 1}`
-    const picks: string[] = []
-    for (const f of flightOrder) {
-      const row = byFlight[f][i]!
-      picks.push(idFor(row))
+  for (let n = 1; n <= 8; n++) {
+    const teamName = `Team ${n}`
+    const rows = ROSTER_2026.filter((r) => r.teamName === teamName).sort(
+      (a, b) => flightOrder[a.flight] - flightOrder[b.flight],
+    )
+    if (rows.length !== 4) {
+      throw new Error(`${teamName}: expected 4 roster rows, got ${rows.length}`)
     }
     teams.push({
-      id: tid,
-      name: `Team ${i + 1}`,
-      playerIds: picks,
+      id: `team-${n}`,
+      name: teamName,
+      playerIds: rows.map((r) => rosterPlayerId(r)),
     })
-    for (const pid of picks) {
-      const p = byId.get(pid)
-      if (p) p.teamId = tid
-    }
   }
+
   return { players, teams }
 }
 
@@ -217,6 +222,11 @@ export const defaultLeagueData: LeagueData = {
   schedule: seedSchedule,
   weeklyScores: {},
 }
+
+/** For migrating older JSON that omits `isSenior`. */
+export const defaultLeagueSeniorIds = new Set(
+  defaultLeagueData.players.filter((p) => p.isSenior).map((p) => p.id),
+)
 
 export function cloneDefaultLeagueData(): LeagueData {
   return JSON.parse(JSON.stringify(defaultLeagueData)) as LeagueData

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import type { FlightId, LeagueData, Player, Team } from './data/leagueTypes'
 import {
-  computeHandicapIndex,
+  formatGrossRecordedVsHandicap,
   formatHandicapIndex,
   getNineForWeek,
   grossTotalFromHoles,
   handicapTotalFromHoles,
+  playerHandicapIndexAtWeek,
 } from './lib/handicap'
 import {
   flightPointsForWeek,
@@ -40,14 +41,6 @@ function compareTeamsByLeagueNumber(a: Team, b: Team): number {
 function formatStandingScore(n: number | null): string {
   if (n == null) return '—'
   return Number.isInteger(n) ? String(n) : (Math.round(n * 10) / 10).toFixed(1)
-}
-
-/** Recorded 9-hole gross vs handicap gross (triple-bogey cap per hole); single value when equal or no cap diff. */
-function formatTeamCardGrs(recorded: number | null, hcpGross: number | null): string {
-  if (recorded == null) return '—'
-  if (hcpGross == null) return String(recorded)
-  if (recorded === hcpGross) return String(recorded)
-  return `${recorded}/${hcpGross}`
 }
 
 function TeamRosterSubtitle({
@@ -92,11 +85,6 @@ function TeamRosterSubtitle({
   )
 }
 
-function playerGrossForWeek(data: LeagueData, playerId: string, week: number): number | null {
-  const row = data.weeklyScores[playerId]?.[String(week)]
-  return grossTotalFromHoles(row)
-}
-
 function TeamWeekCard({
   data,
   team,
@@ -124,7 +112,7 @@ function TeamWeekCard({
               <th className={styles.standingsNum}>HCP</th>
               <th
                 className={styles.standingsScore}
-                title="Recorded 9-hole total; when shown as two numbers, second is handicap gross (each hole capped at triple bogey)."
+                title="Recorded 9-hole total; when shown as two numbers, second is handicap gross (each hole capped at double bogey)."
               >
                 Grs
               </th>
@@ -144,20 +132,19 @@ function TeamWeekCard({
               const recordedGross = grossTotalFromHoles(weekRow)
               const handicapGross =
                 weekRow && nine ? handicapTotalFromHoles(weekRow, nine.holes) : null
-              const grsDisplay = formatTeamCardGrs(recordedGross, handicapGross)
+              const grsDisplay = formatGrossRecordedVsHandicap(recordedGross, handicapGross)
               const grsTitle =
                 recordedGross != null && handicapGross != null && recordedGross !== handicapGross
-                  ? `${recordedGross} recorded / ${handicapGross} handicap gross (max +3 strokes vs par per hole)`
+                  ? `${recordedGross} recorded / ${handicapGross} handicap gross (max +2 strokes vs par per hole)`
                   : undefined
-              const gross = playerGrossForWeek(data, pid, week)
               const net = p ? playerNetForWeek(data, p, week) : null
               const hcpIdx =
-                p != null && gross != null
-                  ? computeHandicapIndex({
-                      priorSeasonScores: p.priorSeasonScores,
-                      currentSeasonTotals: handicapTotalsBeforeWeek(data, p, week),
-                      asOfLeagueWeek: week,
-                    })
+                p != null
+                  ? playerHandicapIndexAtWeek(
+                      p,
+                      handicapTotalsBeforeWeek(data, p, week),
+                      week,
+                    )
                   : null
               const dropped = droppedNetPlayerId != null && pid === droppedNetPlayerId
               const netCell =
