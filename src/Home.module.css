@@ -979,6 +979,14 @@
   width: 3.25rem;
 }
 
+.standingsWeekNet {
+  font-size: 0.78em;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 0.2em;
+  white-space: nowrap;
+}
+
 /* —— Golf-offs report —— */
 .golfOffsRoot {
   display: flex;

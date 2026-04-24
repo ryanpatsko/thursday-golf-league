@@ -306,7 +306,9 @@ export default function StandingsTab({
                 </tr>
               </thead>
               <tbody>
-                {teamsSorted.map((t) => (
+                {teamsSorted.map((t) => {
+                  const teamWeekNet = teamMatchNetTotal(data, t, selectedWeek)
+                  return (
                   <tr key={t.id}>
                     <td>
                       <div className={styles.standingsTeamCell}>
@@ -314,10 +316,16 @@ export default function StandingsTab({
                         <TeamRosterSubtitle data={data} team={t} week={selectedWeek} />
                       </div>
                     </td>
-                    <td className={styles.standingsNum}>{formatStandingPoints(teamWeekPts.get(t.id) ?? 0)}</td>
+                    <td className={styles.standingsNum}>
+                      {formatStandingPoints(teamWeekPts.get(t.id) ?? 0)}
+                      {teamWeekNet != null ? (
+                        <span className={styles.standingsWeekNet}>({teamWeekNet})</span>
+                      ) : null}
+                    </td>
                     <td className={styles.standingsNum}>{formatStandingPoints(teamHalfPts.get(t.id) ?? 0)}</td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -352,6 +360,7 @@ export default function StandingsTab({
                         {players.map((p) => {
                           const selectedWkDate = data.schedule.find((s) => s.leagueWeekNumber === selectedWeek && !s.rainOut)?.date ?? ''
                           const isPull = isPullRow(data.weeklyScores[p.id]?.[selectedWkDate])
+                          const playerWeekNet = playerNetForWeek(data, p, selectedWeek)
                           return (
                           <tr key={p.id}>
                             <td>
@@ -374,7 +383,12 @@ export default function StandingsTab({
                                 ) : null}
                               </span>
                             </td>
-                            <td className={styles.standingsNum}>{formatStandingPoints(weekPts.get(p.id) ?? 0)}</td>
+                            <td className={styles.standingsNum}>
+                              {formatStandingPoints(weekPts.get(p.id) ?? 0)}
+                              {playerWeekNet != null ? (
+                                <span className={styles.standingsWeekNet}>({playerWeekNet})</span>
+                              ) : null}
+                            </td>
                             <td className={styles.standingsNum}>{formatStandingPoints(halfPts.get(p.id) ?? 0)}</td>
                           </tr>
                           )
