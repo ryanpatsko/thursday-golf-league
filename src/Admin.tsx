@@ -14,6 +14,7 @@ import ScheduleEditor from './admin/ScheduleEditor.tsx'
 import ScoresEditor from './admin/ScoresEditor.tsx'
 import TeeTimesEditor from './admin/TeeTimesEditor.tsx'
 import type { LeagueData } from './data/leagueTypes.ts'
+import { defaultLeagueWeekNumber } from './lib/scheduleWeek.ts'
 import {
   adminLogin,
   adminVerifySession,
@@ -125,7 +126,7 @@ function AdminDashboard({
               <RostersEditor data={league} onChange={onChange} />
             ) : null}
             {id === 'schedule' && activeTab === 'schedule' ? (
-              <ScheduleEditor data={league} onChange={onChange} />
+              <ScheduleEditor data={league} onChange={onChange} persistLeague={persistLeague} setSaveMsg={setSaveMsg} />
             ) : null}
             {id === 'scores' && activeTab === 'scores' ? (
               <ScoresEditor
@@ -197,8 +198,7 @@ export default function Admin() {
           ? null
           : 'Could not read league-data.json from S3 — showing built-in seed roster until the bucket is wired up.',
       )
-      const firstWeek = data.schedule[0]?.leagueWeekNumber
-      if (typeof firstWeek === 'number') setSelectedWeek(firstWeek)
+      setSelectedWeek(defaultLeagueWeekNumber(data))
     })()
     return () => {
       cancelled = true

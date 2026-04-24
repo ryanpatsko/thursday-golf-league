@@ -42,15 +42,23 @@ export function formatGrossRecordedVsHandicap(
   return `${recorded}/${handicapGross}`
 }
 
+/** True when a row represents a pulled score (new `pulledNet` or legacy `pulledGross`). */
+export function isPullRow(row: WeeklyScoreRow | undefined): boolean {
+  return row != null && (row.pulledNet != null || row.pulledGross != null)
+}
+
 /** True when all nine holes are entered (not a pull / not incomplete). */
 export function hasCompletePostedHoles(row: WeeklyScoreRow | undefined): boolean {
   if (!row?.holes || row.holes.length !== 9) return false
-  if (row.pulledGross != null) return false
+  if (isPullRow(row)) return false
   return row.holes.every((s) => s != null && Number.isFinite(s))
 }
 
 export function grossTotalFromHoles(row: WeeklyScoreRow | undefined): number | null {
   if (!row) return null
+  // New-style pulls only store a net — no gross available.
+  if (row.pulledNet != null) return null
+  // Legacy pulls stored a gross value.
   if (row.pulledGross != null && Number.isFinite(row.pulledGross)) {
     return Math.round(row.pulledGross)
   }
@@ -64,6 +72,19 @@ export function grossTotalFromHoles(row: WeeklyScoreRow | undefined): number | n
   }
   if (filled !== 9) return null
   return total
+}
+
+/**
+ * Net total for a row: returns `pulledNet` directly for pull rows,
+ * otherwise computes gross minus whole-number handicap index.
+ */
+export function netTotalForRow(
+  row: WeeklyScoreRow | undefined,
+  handicapIndex: number | null,
+): number | null {
+  if (!row) return null
+  if (row.pulledNet != null && Number.isFinite(row.pulledNet)) return Math.round(row.pulledNet)
+  return netNineFromGrossAndIndex(grossTotalFromHoles(row), handicapIndex)
 }
 
 export function relativeToParGross(

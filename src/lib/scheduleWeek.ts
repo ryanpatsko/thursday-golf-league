@@ -11,11 +11,14 @@ export function toIsoDateLocal(d: Date): string {
 /**
  * Default week: league night on this calendar Thursday (today) if it matches a row;
  * else the first scheduled week on or after today; else the last scheduled week.
+ * Rain-out rows are excluded.
  */
 export function defaultLeagueWeekNumber(data: LeagueData, today: Date = new Date()): number {
   const iso = toIsoDateLocal(today)
   const dow = today.getDay()
-  const rows = [...data.schedule].sort((a, b) => a.date.localeCompare(b.date))
+  const rows = [...data.schedule]
+    .filter((r) => !r.rainOut)
+    .sort((a, b) => a.date.localeCompare(b.date))
   if (rows.length === 0) return 1
 
   if (dow === 4) {
@@ -29,8 +32,19 @@ export function defaultLeagueWeekNumber(data: LeagueData, today: Date = new Date
   return rows[rows.length - 1]!.leagueWeekNumber
 }
 
+/**
+ * Returns the ISO date for the active (non-rain-out) schedule row with the given week number,
+ * or `undefined` if no matching row exists. Use this to look up weeklyScores by date.
+ */
+export function dateForWeek(schedule: LeagueData['schedule'], weekNum: number): string | undefined {
+  return schedule.find((r) => r.leagueWeekNumber === weekNum && !r.rainOut)?.date
+}
+
+/** Active (non-rain-out) league week numbers in ascending order. */
 export function weekNumbersInOrder(data: LeagueData): number[] {
-  return [...new Set(data.schedule.map((r) => r.leagueWeekNumber))].sort((a, b) => a - b)
+  return [...new Set(data.schedule.filter((r) => !r.rainOut).map((r) => r.leagueWeekNumber))].sort(
+    (a, b) => a - b,
+  )
 }
 
 /** Label for week dropdowns, e.g. `Week 1 · 4/16/2026`. */

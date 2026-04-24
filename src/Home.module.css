@@ -422,11 +422,22 @@
 }
 
 .teamCardRowDropped td {
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.38);
 }
 
 .teamCardRowDropped .standingsScore {
   text-decoration: line-through;
+}
+
+.teamCardRowDropped .teamCardScoreGolfOff {
+  text-decoration: line-through;
+  border-color: rgba(255, 255, 255, 0.38);
+}
+
+.weeklyPullBadge {
+  color: var(--red, #e05252);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .teamCardTotalRow td {

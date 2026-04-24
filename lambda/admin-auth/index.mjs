@@ -173,9 +173,15 @@ function validateTeam(t) {
 function validateScheduleRow(row) {
   if (!row || typeof row !== 'object') return false
   if (typeof row.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(row.date)) return false
-  if (typeof row.leagueWeekNumber !== 'number' || row.leagueWeekNumber < 1 || row.leagueWeekNumber > 99)
-    return false
   if (!NINES.has(row.nine)) return false
+  if (row.rainOut === true) {
+    // Rain-out rows must have leagueWeekNumber === 0
+    if (row.leagueWeekNumber !== 0) return false
+  } else {
+    if (row.rainOut !== undefined && row.rainOut !== false) return false
+    if (typeof row.leagueWeekNumber !== 'number' || row.leagueWeekNumber < 1 || row.leagueWeekNumber > 99)
+      return false
+  }
   if (row.label !== undefined) {
     if (typeof row.label !== 'string' || row.label.length > 120) return false
   }
@@ -193,9 +199,15 @@ function validateWeeklyScores(scores) {
     const wk = Object.entries(byWeek)
     if (wk.length > 30) return false
     for (const [weekKey, row] of wk) {
-      if (typeof weekKey !== 'string' || !/^\d+$/.test(weekKey)) return false
-      const n = Number(weekKey)
-      if (n < 1 || n > 99) return false
+      // Accept ISO date keys (new format: "2026-04-23") or legacy week-number keys ("1"–"99")
+      if (typeof weekKey !== 'string') return false
+      const isDateKey = /^\d{4}-\d{2}-\d{2}$/.test(weekKey)
+      const isWeekKey = /^\d{1,2}$/.test(weekKey)
+      if (!isDateKey && !isWeekKey) return false
+      if (isWeekKey) {
+        const n = Number(weekKey)
+        if (n < 1 || n > 99) return false
+      }
       if (!row || typeof row !== 'object') return false
       const rowKeys = Object.keys(row)
       for (const rk of rowKeys) {
@@ -203,6 +215,7 @@ function validateWeeklyScores(scores) {
           rk !== 'holes' &&
           rk !== 'golfOffPlayedDate' &&
           rk !== 'pulledGross' &&
+          rk !== 'pulledNet' &&
           rk !== 'pulledFromPlayerName'
         )
           return false
@@ -216,6 +229,19 @@ function validateWeeklyScores(scores) {
       if (row.golfOffPlayedDate != null) {
         if (typeof row.golfOffPlayedDate !== 'string') return false
         if (!/^\d{4}-\d{2}-\d{2}$/.test(row.golfOffPlayedDate)) return false
+      }
+      if (row.pulledNet != null) {
+        if (typeof row.pulledNet !== 'number' || !Number.isFinite(row.pulledNet)) return false
+        if (row.pulledNet < 10 || row.pulledNet > 90) return false
+        if (row.golfOffPlayedDate != null) return false
+        if (row.pulledGross != null) return false
+        for (const s of row.holes) {
+          if (s !== null) return false
+        }
+        if (row.pulledFromPlayerName != null) {
+          if (typeof row.pulledFromPlayerName !== 'string') return false
+          if (row.pulledFromPlayerName.length < 1 || row.pulledFromPlayerName.length > 80) return false
+        }
       }
       if (row.pulledGross != null) {
         if (typeof row.pulledGross !== 'number' || !Number.isFinite(row.pulledGross)) return false
@@ -385,6 +411,7 @@ export async function handler(event) {
           leagueWeekNumber: Math.floor(r.leagueWeekNumber),
           nine: r.nine,
         }
+        if (r.rainOut === true) row.rainOut = true
         if (r.label != null && String(r.label).trim()) row.label = String(r.label).trim()
         return row
       }),

@@ -1,9 +1,9 @@
-import type { LeagueData, Player, Team } from '../data/leagueTypes'
+﻿import type { LeagueData, Player, Team } from '../data/leagueTypes'
 import {
   getNineForWeek,
-  grossTotalFromHoles,
   handicapTotalFromHoles,
-  netNineFromGrossAndIndex,
+  isPullRow,
+  netTotalForRow,
   playerHandicapIndexAtWeek,
   sumPars,
 } from './handicap'
@@ -14,9 +14,10 @@ const ABSENT_NET_FALLBACK = 42
 export function handicapTotalsBeforeWeek(data: LeagueData, player: Player, beforeWeek: number): number[] {
   const out: number[] = []
   for (let w = 1; w < beforeWeek; w++) {
-    const row = data.weeklyScores[player.id]?.[String(w)]
-    const sched = data.schedule.find((s) => s.leagueWeekNumber === w)
-    if (!sched || !row) continue
+    const sched = data.schedule.find((s) => s.leagueWeekNumber === w && !s.rainOut)
+    if (!sched) continue
+    const row = data.weeklyScores[player.id]?.[sched.date]
+    if (!row) continue
     const nine = getNineForWeek(data.course, sched.nine, player)
     const cap = handicapTotalFromHoles(row, nine.holes)
     if (cap != null) out.push(cap)
@@ -25,13 +26,12 @@ export function handicapTotalsBeforeWeek(data: LeagueData, player: Player, befor
 }
 
 export function playerNetForWeek(data: LeagueData, player: Player, week: number): number | null {
-  const sched = data.schedule.find((s) => s.leagueWeekNumber === week)
+  const sched = data.schedule.find((s) => s.leagueWeekNumber === week && !s.rainOut)
   if (!sched) return null
-  const row = data.weeklyScores[player.id]?.[String(week)]
-  const gross = grossTotalFromHoles(row)
+  const row = data.weeklyScores[player.id]?.[sched.date]
   const hist = handicapTotalsBeforeWeek(data, player, week)
   const idx = playerHandicapIndexAtWeek(player, hist, week)
-  return netNineFromGrossAndIndex(gross, idx)
+  return netTotalForRow(row, idx)
 }
 
 function averagePriorPlayerNets(data: LeagueData, player: Player, beforeWeek: number): number | null {
@@ -176,11 +176,11 @@ export function teamPointsForWeek(data: LeagueData, week: number): Map<string, n
 
 export function flightPointsForWeek(data: LeagueData, flight: Player['flight'], week: number): Map<string, number> {
   const inFlight = data.players.filter((p) => p.flight === flight).sort((a, b) => a.name.localeCompare(b.name))
-  const wk = String(week)
+  const wkDate = data.schedule.find((s) => s.leagueWeekNumber === week && !s.rainOut)?.date ?? ''
   const scoreById = new Map<string, number | null>()
   for (const p of inFlight) {
-    const row = data.weeklyScores[p.id]?.[wk]
-    if (row?.pulledGross != null) {
+    const row = data.weeklyScores[p.id]?.[wkDate]
+    if (isPullRow(row)) {
       scoreById.set(p.id, null)
     } else {
       scoreById.set(p.id, playerNetForWeek(data, p, week))
@@ -190,9 +190,9 @@ export function flightPointsForWeek(data: LeagueData, flight: Player['flight'], 
     inFlight.map((p) => p.id),
     scoreById,
   )
-  /** Pulled rounds still drive team net/gross but never earn flight points (even if tie logic would split “last place”). */
+  /** Pulled rounds still drive team net standings but never earn flight points. */
   for (const p of inFlight) {
-    if (data.weeklyScores[p.id]?.[wk]?.pulledGross != null) {
+    if (isPullRow(data.weeklyScores[p.id]?.[wkDate])) {
       out.set(p.id, 0)
     }
   }

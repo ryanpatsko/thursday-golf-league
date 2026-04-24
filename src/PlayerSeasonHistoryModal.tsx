@@ -4,7 +4,8 @@ import {
   formatHandicapIndex,
   getNineForWeek,
   grossTotalFromHoles,
-  netNineFromGrossAndIndex,
+  isPullRow,
+  netTotalForRow,
   playerHandicapIndexAtWeek,
 } from './lib/handicap'
 import { holeScoreBadgeClassName } from './lib/holeScoreDisplay'
@@ -36,16 +37,16 @@ export default function PlayerSeasonHistoryModal({
   }, [onClose])
 
   const rounds = useMemo(() => {
-    const sorted = [...data.schedule].sort((a, b) => a.date.localeCompare(b.date))
+    const sorted = [...data.schedule].filter((r) => !r.rainOut).sort((a, b) => a.date.localeCompare(b.date))
     return sorted.map((schedule) => {
       const week = schedule.leagueWeekNumber
       const nineSide = schedule.nine
-      const scoreRow = data.weeklyScores[player.id]?.[String(week)]
+      const scoreRow = data.weeklyScores[player.id]?.[schedule.date]
       const nine = getNineForWeek(data.course, nineSide, player)
       const gross = grossTotalFromHoles(scoreRow)
       const handicapHistory = handicapTotalsBeforeWeek(data, player, week)
       const hcp = playerHandicapIndexAtWeek(player, handicapHistory, week)
-      const net = netNineFromGrossAndIndex(gross, hcp)
+      const net = netTotalForRow(scoreRow, hcp)
       const flightPts = flightPointsForWeek(data, player.flight, week).get(player.id) ?? 0
       return { schedule, week, nineSide, scoreRow, nine, gross, net, hcp, flightPts }
     })
@@ -175,16 +176,22 @@ export default function PlayerSeasonHistoryModal({
                       )
                     })}
                     <td className={`${styles.weeklyTdNum} ${styles.weeklyThSep}`}>
-                      {gross == null ? '—' : gross}
+                      {isPullRow(row) ? (
+                        <span className={styles.weeklyPullBadge} title="Pull — net score copied from a flight peer">
+                          P
+                        </span>
+                      ) : gross == null ? (
+                        '—'
+                      ) : (
+                        gross
+                      )}
                     </td>
                     <td className={`${styles.weeklyTdNum} ${styles.weeklyThSepLeft}`}>
                       {net == null ? '—' : net}
                     </td>
                     <td className={styles.weeklyTdNum}>{formatHandicapIndex(idx)}</td>
                     <td className={`${styles.weeklyTdNum} ${styles.weeklyThSepLeft}`}>
-                      {gross == null || row?.pulledGross != null
-                        ? '—'
-                        : formatStandingPoints(flightPts)}
+                      {isPullRow(row) || net == null ? '—' : formatStandingPoints(flightPts)}
                     </td>
                   </tr>
                 ),

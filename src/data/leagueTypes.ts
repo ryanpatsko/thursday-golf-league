@@ -1,4 +1,4 @@
-export type FlightId = 'A' | 'B' | 'C' | 'D'
+﻿export type FlightId = 'A' | 'B' | 'C' | 'D'
 export type NineSide = 'front' | 'back'
 
 export interface HoleDef {
@@ -56,6 +56,8 @@ export interface Team {
 }
 
 export interface ScheduleRow {
+  /** When true this date was rained out and does not count as a league week. `leagueWeekNumber` is 0. */
+  rainOut?: boolean
   date: string
   leagueWeekNumber: number
   nine: NineSide
@@ -70,11 +72,16 @@ export interface WeeklyScoreRow {
    */
   golfOffPlayedDate?: string
   /**
-   * Absent week: 9-hole gross copied from a random flight peer’s posted round. Holes stay blank.
-   * Not eligible for flight points; still used for team net / gross standings.
+   * Absent week: 9-hole net score manually chosen from a flight peer's posted round.
+   * Holes stay blank. Not eligible for flight points; still used for team net standings.
+   */
+  pulledNet?: number
+  /**
+   * Legacy field - absent week gross copied from a flight peer's posted round.
+   * @deprecated New pulls use `pulledNet` instead. Retained for backward compatibility.
    */
   pulledGross?: number
-  /** Snapshot of the peer’s display name when `pulledGross` was recorded (for admin clarity). */
+  /** Snapshot of the peer's display name when the pull was recorded (for admin clarity). */
   pulledFromPlayerName?: string
 }
 

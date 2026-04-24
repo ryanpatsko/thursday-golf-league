@@ -6,7 +6,8 @@ import {
   getNineForWeek,
   grossTotalFromHoles,
   handicapTotalFromHoles,
-  netNineFromGrossAndIndex,
+  isPullRow,
+  netTotalForRow,
   playerHandicapIndexAtWeek,
 } from './lib/handicap'
 import { holeScoreBadgeClassName } from './lib/holeScoreDisplay'
@@ -144,17 +145,17 @@ export default function WeeklyScoresTab({
       D: flightPointsForWeek(data, 'D', selectedWeek),
     } as const
     return data.players.map((p): WeeklyRow => {
-      const scoreRow = data.weeklyScores[p.id]?.[String(selectedWeek)]
+      const scoreRow = sched ? data.weeklyScores[p.id]?.[sched.date] : undefined
       const nine = getNineForWeek(data.course, scheduledNine, p)
       const gross = grossTotalFromHoles(scoreRow)
       const handicapGross =
         scoreRow && scoreRow.holes?.length ? handicapTotalFromHoles(scoreRow, nine.holes) : null
       const handicapHistory = handicapTotalsBeforeWeek(data, p, selectedWeek)
       const hcp = playerHandicapIndexAtWeek(p, handicapHistory, selectedWeek)
-      const net = netNineFromGrossAndIndex(gross, hcp)
+      const net = netTotalForRow(scoreRow, hcp)
       const holeScores = nine.holes.map((_, i) => scoreRow?.holes[i] ?? null)
       const flightPts =
-        gross != null && !scoreRow?.pulledGross ? (ptsByFlight[p.flight].get(p.id) ?? 0) : null
+        !isPullRow(scoreRow) && net != null ? (ptsByFlight[p.flight].get(p.id) ?? 0) : null
       return { player: p, scoreRow, nine, gross, handicapGross, net, hcp, flightPts, holeScores }
     })
   }, [data, selectedWeek, sched, scheduledNine])

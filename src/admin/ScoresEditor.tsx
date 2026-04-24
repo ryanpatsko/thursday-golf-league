@@ -7,7 +7,9 @@ import {
   grossTotalFromHoles,
   handicapTotalFromHoles,
   hasCompletePostedHoles,
+  isPullRow,
   netNineFromGrossAndIndex,
+  netTotalForRow,
 } from '../lib/handicap'
 import { holeScoreBadgeClassName } from '../lib/holeScoreDisplay'
 import { flightPointsForWeek, formatStandingPoints } from '../lib/leagueScoring'
@@ -37,9 +39,10 @@ function isValidCalendarIsoDate(iso: string): boolean {
 function totalsBeforeWeek(data: LeagueData, player: Player, beforeWeek: number): number[] {
   const out: number[] = []
   for (let w = 1; w < beforeWeek; w++) {
-    const row = data.weeklyScores[player.id]?.[String(w)]
-    const sched = data.schedule.find((s) => s.leagueWeekNumber === w)
-    if (!sched || !row) continue
+    const sched = data.schedule.find((s) => s.leagueWeekNumber === w && !s.rainOut)
+    if (!sched) continue
+    const row = data.weeklyScores[player.id]?.[sched.date]
+    if (!row) continue
     const nine = getNineForWeek(data.course, sched.nine, player)
     const cap = handicapTotalFromHoles(row, nine.holes)
     if (cap != null) out.push(cap)
@@ -64,6 +67,10 @@ function holesRowComplete(holes: (number | null)[]): boolean {
   )
 }
 
+function dateForWeekInData(data: LeagueData, week: number): string | undefined {
+  return data.schedule.find((s) => s.leagueWeekNumber === week && !s.rainOut)?.date
+}
+
 function commitWeekScores(
   data: LeagueData,
   playerId: string,
@@ -71,11 +78,13 @@ function commitWeekScores(
   holes: (number | null)[],
   golfOffPlayedDate: string | null,
 ): LeagueData {
+  const date = dateForWeekInData(data, week)
+  if (!date) return data
   const nextScores = { ...data.weeklyScores }
   const byWeek = { ...(nextScores[playerId] ?? {}) }
   const allNull = holes.every((x) => x == null)
   if (allNull) {
-    const { [String(week)]: _, ...rest } = byWeek
+    const { [date]: _, ...rest } = byWeek
     nextScores[playerId] = rest
     if (Object.keys(rest).length === 0) {
       const { [playerId]: __, ...scoresRest } = nextScores
@@ -84,16 +93,18 @@ function commitWeekScores(
   } else {
     const row: WeeklyScoreRow = { holes: [...holes] }
     if (golfOffPlayedDate) row.golfOffPlayedDate = golfOffPlayedDate
-    byWeek[String(week)] = row
+    byWeek[date] = row
     nextScores[playerId] = byWeek
   }
   return { ...data, weeklyScores: nextScores }
 }
 
 function clearWeekScores(data: LeagueData, playerId: string, week: number): LeagueData {
+  const date = dateForWeekInData(data, week)
+  if (!date) return data
   const nextScores = { ...data.weeklyScores }
   const byWeek = { ...(nextScores[playerId] ?? {}) }
-  const { [String(week)]: _, ...rest } = byWeek
+  const { [date]: _, ...rest } = byWeek
   if (Object.keys(rest).length === 0) {
     const { [playerId]: __, ...scoresRest } = nextScores
     return { ...data, weeklyScores: scoresRest }
@@ -106,18 +117,20 @@ function commitPulledWeek(
   data: LeagueData,
   playerId: string,
   week: number,
-  pulledGross: number,
+  pulledNet: number,
   pulledFromPlayerName: string,
 ): LeagueData {
+  const date = dateForWeekInData(data, week)
+  if (!date) return data
   const nextScores = { ...data.weeklyScores }
   const byWeek = { ...(nextScores[playerId] ?? {}) }
   const blankHoles: (number | null)[] = Array.from({ length: 9 }, () => null)
   const row: WeeklyScoreRow = {
     holes: blankHoles,
-    pulledGross: Math.round(pulledGross),
+    pulledNet: Math.round(pulledNet),
     pulledFromPlayerName,
   }
-  byWeek[String(week)] = row
+  byWeek[date] = row
   nextScores[playerId] = byWeek
   return { ...data, weeklyScores: nextScores }
 }
@@ -140,53 +153,50 @@ function ScoreEntryModal({
     holes: (number | null)[],
     golfOffPlayedDate: string | null,
   ) => Promise<{ ok: true } | { ok: false; message: string }>
-  onSavePull: (args: { pulledGross: number; pulledFromPlayerName: string }) => Promise<
+  onSavePull: (args: { pulledNet: number; pulledFromPlayerName: string }) => Promise<
     { ok: true } | { ok: false; message: string }
   >
   onClear: () => Promise<{ ok: true } | { ok: false; message: string }>
   onClose: () => void
 }) {
-  const existing = data.weeklyScores[player.id]?.[String(selectedWeek)]
+  const weekDate = data.schedule.find((s) => s.leagueWeekNumber === selectedWeek && !s.rainOut)?.date
+  const existing = weekDate ? data.weeklyScores[player.id]?.[weekDate] : undefined
   const [holes, setHoles] = useState<(number | null)[]>(() => ensureNineHoles(existing?.holes))
   const [isGolfOff, setIsGolfOff] = useState(() => Boolean(existing?.golfOffPlayedDate))
   const [golfOffDate, setGolfOffDate] = useState(() => existing?.golfOffPlayedDate ?? '')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [screen, setScreen] = useState<'entry' | 'pull'>('entry')
-  const [pullPhase, setPullPhase] = useState<'pick' | 'drawing' | 'result'>('pick')
-  const [drawnPull, setDrawnPull] = useState<{ gross: number; fromName: string } | null>(null)
   const [pullSaving, setPullSaving] = useState(false)
   const [pullSaveError, setPullSaveError] = useState<string | null>(null)
   const playerNine = getNineForWeek(data.course, scheduledNine, player)
 
-  const hasSavedWeek = Boolean(data.weeklyScores[player.id]?.[String(selectedWeek)])
+  const hasSavedWeek = Boolean(weekDate && data.weeklyScores[player.id]?.[weekDate])
 
-  const flightPeers = useMemo(() => {
+  /** All flight peers sorted by net score ascending (posted first), then unposted alphabetically. */
+  const flightPeersForPull = useMemo(() => {
     return data.players
       .filter((p) => p.flight === player.flight && p.id !== player.id)
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [data.players, player.flight, player.id])
-
-  const postedPeersForPull = useMemo(() => {
-    const wk = String(selectedWeek)
-    const out: { peer: Player; gross: number }[] = []
-    for (const p of flightPeers) {
-      const r = data.weeklyScores[p.id]?.[wk]
-      if (hasCompletePostedHoles(r)) {
-        const g = grossTotalFromHoles(r)
-        if (g != null) out.push({ peer: p, gross: g })
-      }
-    }
-    return out
-  }, [data.weeklyScores, flightPeers, selectedWeek])
-
-  const canPullFromPool = postedPeersForPull.length > 0
-  const pullBusy = pullSaving || pullPhase === 'drawing'
+      .map((peer) => {
+        const r = weekDate ? data.weeklyScores[peer.id]?.[weekDate] : undefined
+        const posted = hasCompletePostedHoles(r)
+        if (!posted) return { peer, net: null }
+        const gross = grossTotalFromHoles(r)
+        const hist = totalsBeforeWeek(data, peer, selectedWeek)
+        const idx = playerHandicapIndexAtWeek(peer, hist, selectedWeek)
+        const net = netNineFromGrossAndIndex(gross, idx)
+        return { peer, net }
+      })
+      .sort((a, b) => {
+        if (a.net != null && b.net != null) return a.net - b.net
+        if (a.net != null) return -1
+        if (b.net != null) return 1
+        return a.peer.name.localeCompare(b.peer.name)
+      })
+  }, [data, player.flight, player.id, selectedWeek])
 
   function leavePullScreen() {
     setScreen('entry')
-    setPullPhase('pick')
-    setDrawnPull(null)
     setPullSaveError(null)
   }
 
@@ -194,19 +204,15 @@ function ScoreEntryModal({
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       if (saving || pullSaving) return
-      if (pullPhase === 'drawing') return
       if (screen === 'pull') {
-        setScreen('entry')
-        setPullPhase('pick')
-        setDrawnPull(null)
-        setPullSaveError(null)
+        leavePullScreen()
         return
       }
       onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, saving, pullSaving, pullPhase, screen])
+  }, [onClose, saving, pullSaving, screen])
 
   function setHole(i: number, raw: string) {
     const trimmed = raw.trim()
@@ -248,7 +254,6 @@ function ScoreEntryModal({
       onMouseDown={(e) => {
         if (e.target !== e.currentTarget) return
         if (saving || pullSaving) return
-        if (pullPhase === 'drawing') return
         if (screen === 'pull') {
           leavePullScreen()
           return
@@ -271,120 +276,61 @@ function ScoreEntryModal({
               Week {selectedWeek} · {scheduledNine} nine · Flight {player.flight}
             </p>
             <h3 className={styles.scoresModalPullFlightHeading}>Scores from Flight {player.flight}</h3>
-            <ul className={styles.scoresModalPullPeerList}>
-              {flightPeers.map((p) => {
-                const r = data.weeklyScores[p.id]?.[String(selectedWeek)]
-                const posted = hasCompletePostedHoles(r)
-                const g = posted ? grossTotalFromHoles(r) : null
-                return (
-                  <li key={p.id} className={styles.scoresModalPullPeerRow}>
-                    <span>{p.name}</span>
-                    <span className={styles.scoresModalPullGross}>{g == null ? '—' : g}</span>
-                  </li>
-                )
-              })}
-            </ul>
-            {!canPullFromPool ? (
+            {flightPeersForPull.every((e) => e.net == null) ? (
               <p className={styles.scoresModalPullHint}>
                 No fully posted rounds in this flight for this week yet.
               </p>
             ) : null}
-            {pullPhase === 'drawing' ? (
-              <div className={styles.scoresModalPullDrawing} aria-live="polite">
-                <span className={styles.scoresPullSpinner} aria-hidden />
-                <span>Drawing…</span>
-              </div>
-            ) : null}
-            {pullPhase === 'result' && drawnPull != null ? (
-              <p className={styles.scoresModalPullResult}>
-                <span className={styles.scoresModalPullResultLabel}>
-                  Pulled gross ({drawnPull.fromName})
-                </span>
-                <span className={styles.scoresModalPullResultNum}>{drawnPull.gross}</span>
-              </p>
-            ) : null}
+            <ul className={styles.scoresModalPullPeerList}>
+              {flightPeersForPull.map(({ peer, net }, listIdx) => (
+                <li key={peer.id} className={styles.scoresModalPullPeerRow}>
+                  <span className={styles.scoresModalPullPeerNum}>{listIdx + 1}.</span>
+                  <span className={styles.scoresModalPullPeerName}>{peer.name}</span>
+                  <span className={styles.scoresModalPullNet}>{net == null ? '—' : net}</span>
+                  {net != null ? (
+                    <button
+                      type="button"
+                      className={styles.btnSmall}
+                      disabled={pullSaving}
+                      onClick={() => {
+                        void (async () => {
+                          setPullSaveError(null)
+                          setPullSaving(true)
+                          try {
+                            const r = await onSavePull({
+                              pulledNet: net,
+                              pulledFromPlayerName: peer.name,
+                            })
+                            if (r.ok) onClose()
+                            else setPullSaveError(r.message)
+                          } finally {
+                            setPullSaving(false)
+                          }
+                        })()
+                      }}
+                    >
+                      Use this score
+                    </button>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
             {pullSaveError ? (
               <p className={styles.scoresModalSaveErr} role="alert">
                 {pullSaveError}
               </p>
             ) : null}
             <div className={styles.scoresModalPullActions}>
-              {pullPhase !== 'drawing' ? (
-                <button
-                  type="button"
-                  className={styles.btn}
-                  disabled={pullSaving}
-                  onClick={() => {
-                    leavePullScreen()
-                  }}
-                >
-                  Back to scores
-                </button>
-              ) : (
-                <span />
-              )}
-              {pullPhase === 'pick' ? (
-                <button
-                  type="button"
-                  className={styles.btnPrimary}
-                  disabled={!canPullFromPool || pullBusy}
-                  onClick={() => {
-                    if (!canPullFromPool || pullBusy) return
-                    void (async () => {
-                      setPullSaveError(null)
-                      setPullPhase('drawing')
-                      const ms = 900 + Math.random() * 900
-                      await new Promise((r) => setTimeout(r, ms))
-                      const pool = [...postedPeersForPull]
-                      const pick = pool[Math.floor(Math.random() * pool.length)]!
-                      setDrawnPull({ gross: pick.gross, fromName: pick.peer.name })
-                      setPullPhase('result')
-                    })()
-                  }}
-                >
-                  Pull from posted scores
-                </button>
-              ) : null}
-              {pullPhase === 'result' && drawnPull != null ? (
-                <>
-                  <button
-                    type="button"
-                    className={styles.btn}
-                    disabled={pullSaving || !canPullFromPool}
-                    onClick={() => {
-                      setPullSaveError(null)
-                      setPullPhase('pick')
-                      setDrawnPull(null)
-                    }}
-                  >
-                    Draw again
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.btnPrimary}
-                    disabled={pullSaving}
-                    onClick={() => {
-                      void (async () => {
-                        if (drawnPull == null || pullSaving) return
-                        setPullSaveError(null)
-                        setPullSaving(true)
-                        try {
-                          const r = await onSavePull({
-                            pulledGross: drawnPull.gross,
-                            pulledFromPlayerName: drawnPull.fromName,
-                          })
-                          if (r.ok) onClose()
-                          else setPullSaveError(r.message)
-                        } finally {
-                          setPullSaving(false)
-                        }
-                      })()
-                    }}
-                  >
-                    {pullSaving ? 'Saving…' : 'Save pull'}
-                  </button>
-                </>
-              ) : null}
+              <button
+                type="button"
+                className={styles.btn}
+                disabled={pullSaving}
+                onClick={() => {
+                  leavePullScreen()
+                }}
+              >
+                Back to scores
+              </button>
             </div>
           </>
         ) : (
@@ -395,13 +341,17 @@ function ScoreEntryModal({
             <p className={styles.scoresModalMeta}>
               Week {selectedWeek} · {scheduledNine} nine · {player.isSenior ? 'Gold tees' : 'White tees'}
             </p>
-            {existing?.pulledGross != null ? (
+            {existing?.pulledNet != null || existing?.pulledGross != null ? (
               <p className={styles.scoresModalPullNote}>
                 This week uses a pulled score
-                {existing.pulledFromPlayerName
-                  ? ` from ${existing.pulledFromPlayerName}`
-                  : ''}{' '}
-                (gross {existing.pulledGross}). Enter a full scorecard to replace it.
+                {existing.pulledFromPlayerName ? ` from ${existing.pulledFromPlayerName}` : ''}{' '}
+                (net{' '}
+                {existing.pulledNet != null
+                  ? existing.pulledNet
+                  : existing.pulledGross != null
+                    ? existing.pulledGross
+                    : ''}
+                ). Enter a full scorecard to replace it.
               </p>
             ) : null}
             <div className={styles.scoresModalHoles}>
@@ -428,6 +378,19 @@ function ScoreEntryModal({
                   </label>
                 )
               })}
+              <div className={styles.scoresModalScoreTotal}>
+                <span className={styles.scoresModalHoleLabelStack}>
+                  <span className={styles.scoresModalHoleNum}>Score</span>
+                  <span className={styles.scoresModalHolePar}>
+                    {playerNine.holes.reduce((s, h) => s + h.par, 0)}
+                  </span>
+                </span>
+                <span className={styles.scoresModalScoreTotalNum}>
+                  {holes.some((s) => s != null)
+                    ? holes.reduce<number>((sum, s) => sum + (s ?? 0), 0)
+                    : '—'}
+                </span>
+              </div>
             </div>
             <div className={styles.scoresModalPrefillRow}>
               <div className={styles.scoresModalPrefillBtns}>
@@ -473,8 +436,6 @@ function ScoreEntryModal({
                 disabled={saving}
                 onClick={() => {
                   setScreen('pull')
-                  setPullPhase('pick')
-                  setDrawnPull(null)
                   setPullSaveError(null)
                 }}
               >
@@ -649,14 +610,14 @@ export default function ScoresEditor({
             </thead>
             <tbody>
               {players.map((p) => {
-                const row = data.weeklyScores[p.id]?.[String(selectedWeek)]
+                const row = sched ? data.weeklyScores[p.id]?.[sched.date] : undefined
                 const nine = getNineForWeek(data.course, scheduledNine, p)
                 const gross = grossTotalFromHoles(row)
                 const handicapHistory = totalsBeforeWeek(data, p, selectedWeek)
                 const idx = playerHandicapIndexAtWeek(p, handicapHistory, selectedWeek)
-                const net = netNineFromGrossAndIndex(gross, idx)
+                const net = netTotalForRow(row, idx)
                 const flpts =
-                  gross != null && !row?.pulledGross
+                  !isPullRow(row) && net != null
                     ? (flightPtsByFlight[p.flight].get(p.id) ?? 0)
                     : null
                 return (
@@ -664,19 +625,28 @@ export default function ScoresEditor({
                     <td>
                       <div className={styles.scoresPlayerCell}>
                         <span>{p.name}</span>
-                        {row?.pulledGross != null ? (
+                        {isPullRow(row) ? (
                           <span
                             className={styles.scoresPulledTag}
-                            title={`Gross ${row.pulledGross} — absent, scored from flight draw`}
+                            title={
+                              row?.pulledNet != null
+                                ? `Net ${row.pulledNet} — absent, scored from flight peer`
+                                : row?.pulledGross != null
+                                  ? `Gross ${row.pulledGross} — absent, scored from flight draw (legacy)`
+                                  : 'Pull'
+                            }
                           >
-                            {row.pulledFromPlayerName
+                            {row?.pulledFromPlayerName
                               ? `Pull - ${row.pulledFromPlayerName}`
                               : 'Pull'}
                           </span>
                         ) : null}
                         {row?.golfOffPlayedDate ? (
-                          <span className={styles.scoresGolfOffTag} title="Golf-off round">
-                            Golf-off · {formatIsoDateForDisplay(row.golfOffPlayedDate)}
+                          <span
+                            className={styles.scoresGolfOffTag}
+                            title={`Golf-off · ${formatIsoDateForDisplay(row.golfOffPlayedDate)}`}
+                          >
+                            Golf-off
                           </span>
                         ) : null}
                       </div>
@@ -733,13 +703,13 @@ export default function ScoresEditor({
             else setSaveMsg(r.message)
             return r
           }}
-          onSavePull={async ({ pulledGross, pulledFromPlayerName }) => {
+          onSavePull={async ({ pulledNet, pulledFromPlayerName }) => {
             setSaveMsg(null)
             const next = commitPulledWeek(
               data,
               editingPlayer.id,
               selectedWeek,
-              pulledGross,
+              pulledNet,
               pulledFromPlayerName,
             )
             const r = await persistLeague(next)

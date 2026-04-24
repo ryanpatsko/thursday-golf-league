@@ -35,9 +35,9 @@ export type HcPoolEntry =
   | { kind: 'week'; week: number; value: number }
 
 function weekHandicapTotal(data: LeagueData, player: Player, week: number): number | null {
-  const sched = data.schedule.find((s) => s.leagueWeekNumber === week)
+  const sched = data.schedule.find((s) => s.leagueWeekNumber === week && !s.rainOut)
   if (!sched) return null
-  const row = data.weeklyScores[player.id]?.[String(week)]
+  const row = data.weeklyScores[player.id]?.[sched.date]
   const nine = getNineForWeek(data.course, sched.nine, player)
   return handicapTotalFromHoles(row, nine.holes)
 }

@@ -6,6 +6,7 @@ import {
   getNineForWeek,
   grossTotalFromHoles,
   handicapTotalFromHoles,
+  isPullRow,
   playerHandicapIndexAtWeek,
 } from './lib/handicap'
 import {
@@ -53,13 +54,13 @@ function TeamRosterSubtitle({
   week: number
 }) {
   const byId = new Map(data.players.map((p) => [p.id, p]))
-  const wk = String(week)
+  const wkDate = data.schedule.find((s) => s.leagueWeekNumber === week && !s.rainOut)?.date ?? ''
   return (
     <span className={styles.standingsTeamRoster}>
       {team.playerIds.map((id, i) => {
         const p = byId.get(id)
         const isLast = i === team.playerIds.length - 1
-        const isPull = p != null && data.weeklyScores[p.id]?.[wk]?.pulledGross != null
+        const isPull = p != null && isPullRow(data.weeklyScores[p.id]?.[wkDate])
         return (
           <span key={id}>
             {p ? (
@@ -123,10 +124,10 @@ function TeamWeekCard({
             {team.playerIds.map((pid) => {
               const p = byId.get(pid)
               const label = p?.name ?? pid
-              const weekRow = data.weeklyScores[pid]?.[String(week)]
-              const isPulled = weekRow?.pulledGross != null
+              const sched = data.schedule.find((s) => s.leagueWeekNumber === week && !s.rainOut)
+              const weekRow = sched ? data.weeklyScores[pid]?.[sched.date] : undefined
+              const isPulled = isPullRow(weekRow)
               const isGolfOff = Boolean(weekRow?.golfOffPlayedDate)
-              const sched = data.schedule.find((s) => s.leagueWeekNumber === week)
               const nine =
                 p && sched ? getNineForWeek(data.course, sched.nine, p) : null
               const recordedGross = grossTotalFromHoles(weekRow)
@@ -174,7 +175,11 @@ function TeamWeekCard({
                       {isPulled && weekRow ? (
                         <span
                           className={styles.teamCardPulledTag}
-                          title={`Gross ${weekRow.pulledGross} — absent, scored from flight draw`}
+                          title={
+                            weekRow.pulledNet != null
+                              ? `Net ${weekRow.pulledNet} — absent, scored from flight peer`
+                              : `Gross ${weekRow.pulledGross ?? ''} — absent, scored from flight draw`
+                          }
                         >
                           {weekRow.pulledFromPlayerName
                             ? `Pull - ${weekRow.pulledFromPlayerName}`
@@ -345,7 +350,8 @@ export default function StandingsTab({
                       </thead>
                       <tbody>
                         {players.map((p) => {
-                          const isPull = data.weeklyScores[p.id]?.[String(selectedWeek)]?.pulledGross != null
+                          const selectedWkDate = data.schedule.find((s) => s.leagueWeekNumber === selectedWeek && !s.rainOut)?.date ?? ''
+                          const isPull = isPullRow(data.weeklyScores[p.id]?.[selectedWkDate])
                           return (
                           <tr key={p.id}>
                             <td>

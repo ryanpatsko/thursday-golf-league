@@ -1,4 +1,4 @@
-import type { Course, CourseNine, LeagueData, Player, ScheduleRow } from '../data/leagueTypes'
+import type { Course, CourseNine, LeagueData, Player, ScheduleRow, WeeklyScoreRow } from '../data/leagueTypes'
 
 function normalizeHandicapOverride(
   raw: Player['handicapOverride'],
@@ -47,6 +47,66 @@ function padScheduleToMetaTotalWeeks(data: LeagueData): LeagueData {
   return { ...data, schedule: next }
 }
 
+const WEEK_NUM_RE = /^\d{1,2}$/
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Migrates weeklyScores from legacy week-number keys ("1", "2", …) to ISO date keys
+ * ("2026-04-23", …).
+ *
+ * Uses a **positional** reconcile before mapping to dates: the i-th unique week-number key
+ * found across the entire dataset is mapped to the i-th active schedule week.  This correctly
+ * handles the rain-out scenario where, e.g., all scores were stored under key "2" but the
+ * rain-out renumbered that date as week 1 — so "2" maps to the week-1 date, not week-2.
+ *
+ * Date-keyed entries are passed through unchanged.
+ */
+function migrateWeeklyScoresToDateKeys(data: LeagueData): LeagueData {
+  const hasLegacyKeys = Object.values(data.weeklyScores).some((byWeek) =>
+    Object.keys(byWeek).some((k) => WEEK_NUM_RE.test(k)),
+  )
+  if (!hasLegacyKeys) return data
+
+  // Active schedule rows in week-number order, used for the positional mapping
+  const activeScheduleRows = data.schedule
+    .filter((r) => !r.rainOut && r.leagueWeekNumber > 0)
+    .sort((a, b) => a.leagueWeekNumber - b.leagueWeekNumber)
+
+  // Collect all unique legacy week-number keys across all players, sorted numerically
+  const allUsedLegacyKeys = [
+    ...new Set(
+      Object.values(data.weeklyScores).flatMap((byWeek) =>
+        Object.keys(byWeek)
+          .filter((k) => WEEK_NUM_RE.test(k))
+          .map(Number),
+      ),
+    ),
+  ].sort((a, b) => a - b)
+
+  // Positional reconcile: the i-th legacy key maps to the i-th active schedule week's date.
+  // Example: only key "2" exists, schedule's first active week is "2026-04-23" → "2" → that date.
+  const legacyKeyToDate = new Map<number, string>()
+  allUsedLegacyKeys.forEach((key, i) => {
+    const schedRow = activeScheduleRows[i]
+    if (schedRow) legacyKeyToDate.set(key, schedRow.date)
+  })
+
+  const newScores: Record<string, Record<string, WeeklyScoreRow>> = {}
+  for (const [playerId, byWeek] of Object.entries(data.weeklyScores)) {
+    const newByWeek: Record<string, WeeklyScoreRow> = {}
+    for (const [key, row] of Object.entries(byWeek)) {
+      if (ISO_DATE_RE.test(key)) {
+        newByWeek[key] = row // already a date key — pass through
+      } else if (WEEK_NUM_RE.test(key)) {
+        const date = legacyKeyToDate.get(Number(key))
+        if (date) newByWeek[date] = row
+      }
+    }
+    if (Object.keys(newByWeek).length > 0) newScores[playerId] = newByWeek
+  }
+  return { ...data, weeklyScores: newScores }
+}
+
 /** Upgrades pre–dual-tee JSON and ensures `isSenior` exists on players. */
 export function migrateLeagueData(raw: LeagueData): LeagueData {
   let course: Course = raw.course
@@ -80,6 +140,7 @@ export function migrateLeagueData(raw: LeagueData): LeagueData {
     out = { ...out, meta: { ...out.meta, totalWeeks: 19 } }
   }
   out = padScheduleToMetaTotalWeeks(out)
+  out = migrateWeeklyScoresToDateKeys(out)
 
   return out
 }

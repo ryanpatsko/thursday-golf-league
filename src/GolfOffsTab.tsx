@@ -9,9 +9,10 @@ import styles from './Home.module.css'
 type GolfOffEntry = { player: Player; playedDate: string; gross: number | null }
 
 function golfOffsForWeek(data: LeagueData, week: number): GolfOffEntry[] {
+  const wkDate = data.schedule.find((s) => s.leagueWeekNumber === week && !s.rainOut)?.date ?? ''
   const out: GolfOffEntry[] = []
   for (const p of data.players) {
-    const row = data.weeklyScores[p.id]?.[String(week)]
+    const row = data.weeklyScores[p.id]?.[wkDate]
     const d = row?.golfOffPlayedDate
     if (d) out.push({ player: p, playedDate: d, gross: grossTotalFromHoles(row) })
   }
