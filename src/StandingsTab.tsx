@@ -90,10 +90,12 @@ function TeamWeekCard({
   data,
   team,
   week,
+  onPlayerClick,
 }: {
   data: LeagueData
   team: Team
   week: number
+  onPlayerClick: (p: Player) => void
 }) {
   const byId = new Map(data.players.map((p) => [p.id, p]))
   const officialNet = teamMatchNetTotal(data, team, week)
@@ -171,7 +173,18 @@ function TeamWeekCard({
                 >
                   <td>
                     <div className={styles.teamCardPlayerCell}>
-                      <PlayerNameWithSenior name={label} isSenior={p?.isSenior ?? false} />
+                      {p ? (
+                        <button
+                          type="button"
+                          className={styles.standingsPlayerNameBtn}
+                          aria-label={`${p.name} season history`}
+                          onClick={() => onPlayerClick(p)}
+                        >
+                          <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
+                        </button>
+                      ) : (
+                        <PlayerNameWithSenior name={label} isSenior={false} />
+                      )}
                       {isPulled && weekRow ? (
                         <span
                           className={styles.teamCardPulledTag}
@@ -407,7 +420,7 @@ export default function StandingsTab({
 
       <div className={styles.standingsTeamCardsGrid}>
         {teamsInLeagueOrder.map((t) => (
-          <TeamWeekCard key={t.id} data={data} team={t} week={selectedWeek} />
+          <TeamWeekCard key={t.id} data={data} team={t} week={selectedWeek} onPlayerClick={setHistoryPlayer} />
         ))}
       </div>
       {historyPlayer ? (

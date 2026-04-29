@@ -4,13 +4,14 @@ import { FaGolfBallTee } from 'react-icons/fa6'
 import type { LeagueData } from './data/leagueTypes'
 import { loadLeagueDataForPublic } from './lib/leagueApi'
 import { defaultLeagueWeekNumber } from './lib/scheduleWeek'
+import CourseStatsTab from './CourseStatsTab.tsx'
 import GolfOffsTab from './GolfOffsTab.tsx'
 import HandicapsTab from './HandicapsTab.tsx'
 import StandingsTab from './StandingsTab.tsx'
 import WeeklyScoresTab from './WeeklyScoresTab.tsx'
 import styles from './Home.module.css'
 
-const HOME_TABS = ['standings', 'weekly', 'handicaps', 'golfOffs', 'four'] as const
+const HOME_TABS = ['standings', 'weekly', 'handicaps', 'golfOffs', 'courseStats', 'four'] as const
 type HomeTabId = (typeof HOME_TABS)[number]
 
 const TAB_LABELS: Record<HomeTabId, string> = {
@@ -18,6 +19,7 @@ const TAB_LABELS: Record<HomeTabId, string> = {
   weekly: 'Weekly scores',
   handicaps: 'Handicaps',
   golfOffs: 'Golf-offs',
+  courseStats: 'Course Stats',
   four: 'Four Man',
 }
 
@@ -123,6 +125,11 @@ export default function Home() {
             {activeTab === 'golfOffs' ? (
               <div role="tabpanel" className={styles.tabPanel}>
                 <GolfOffsTab data={data} />
+              </div>
+            ) : null}
+            {activeTab === 'courseStats' ? (
+              <div role="tabpanel" className={styles.tabPanel}>
+                <CourseStatsTab data={data} />
               </div>
             ) : null}
             {activeTab === 'four' ? (
