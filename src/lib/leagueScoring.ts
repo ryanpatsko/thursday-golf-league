@@ -168,10 +168,17 @@ export function teamPointsForWeek(data: LeagueData, week: number): Map<string, n
       scoreById.set(t.id, teamMatchNetTotal(data, t, week))
     }
   }
-  return pointsFromRankedScores(
+  const out = pointsFromRankedScores(
     teams.map((t) => t.id),
     scoreById,
   )
+  /** Teams without enough nets posted don't earn points. */
+  for (const t of teams) {
+    if (scoreById.get(t.id) == null) {
+      out.set(t.id, 0)
+    }
+  }
+  return out
 }
 
 export function flightPointsForWeek(data: LeagueData, flight: Player['flight'], week: number): Map<string, number> {
@@ -190,9 +197,9 @@ export function flightPointsForWeek(data: LeagueData, flight: Player['flight'], 
     inFlight.map((p) => p.id),
     scoreById,
   )
-  /** Pulled rounds still drive team net standings but never earn flight points. */
+  /** Pulls and players with no score posted don't earn flight points. */
   for (const p of inFlight) {
-    if (isPullRow(data.weeklyScores[p.id]?.[wkDate])) {
+    if (scoreById.get(p.id) == null) {
       out.set(p.id, 0)
     }
   }

@@ -55,6 +55,24 @@ export interface Team {
   playerIds: string[]
 }
 
+export interface FourManTeam {
+  id: string
+  name: string
+  /** Four slots in flight order A–D; each entry is a player id. */
+  playerIds: string[]
+}
+
+export interface FourManHalf {
+  startWeek: number
+  endWeek: number
+  teams: FourManTeam[]
+}
+
+export interface FourManConfig {
+  firstHalf: FourManHalf
+  secondHalf: FourManHalf
+}
+
 export interface ScheduleRow {
   /** When true this date was rained out and does not count as a league week. `leagueWeekNumber` is 0. */
   rainOut?: boolean
@@ -106,6 +124,8 @@ export interface LeagueData {
   teams: Team[]
   schedule: ScheduleRow[]
   weeklyScores: WeeklyScores
+  /** Four Man competition rosters — separate from the standard weekly team competition. */
+  fourMan?: FourManConfig
   /** Ready list and pulled groups for the Tee Times admin tab. */
   adminTeeTimesSession?: {
     ready: AdminTeeTimesReadyEntry[]

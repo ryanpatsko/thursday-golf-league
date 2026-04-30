@@ -260,6 +260,37 @@ function validateWeeklyScores(scores) {
   return true
 }
 
+/** @param {unknown} t */
+function validateFourManTeam(t) {
+  if (!t || typeof t !== 'object') return false
+  if (typeof t.id !== 'string' || t.id.length > 80 || !ID_RE.test(t.id)) return false
+  const name = typeof t.name === 'string' ? t.name.trim() : ''
+  if (name.length < 1 || name.length > 120) return false
+  if (!Array.isArray(t.playerIds) || t.playerIds.length !== 4) return false
+  for (const pid of t.playerIds) {
+    if (typeof pid !== 'string' || pid.length > 80) return false
+    // Allow empty string for unfilled slots — client-side validation enforces completion
+    if (pid !== '' && !ID_RE.test(pid)) return false
+  }
+  return true
+}
+
+/** @param {unknown} half */
+function validateFourManHalf(half) {
+  if (!half || typeof half !== 'object') return false
+  if (typeof half.startWeek !== 'number' || half.startWeek < 1 || half.startWeek > 99) return false
+  if (typeof half.endWeek !== 'number' || half.endWeek < half.startWeek || half.endWeek > 99)
+    return false
+  if (!Array.isArray(half.teams) || half.teams.length > 32) return false
+  return half.teams.every(validateFourManTeam)
+}
+
+/** @param {unknown} fm */
+function validateFourMan(fm) {
+  if (!fm || typeof fm !== 'object') return false
+  return validateFourManHalf(fm.firstHalf) && validateFourManHalf(fm.secondHalf)
+}
+
 /** @param {unknown} body */
 function validateLeagueDoc(body) {
   if (!body || typeof body !== 'object') return false
@@ -278,6 +309,7 @@ function validateLeagueDoc(body) {
   if (!Array.isArray(body.schedule) || body.schedule.length < 1 || body.schedule.length > 52) return false
   if (!body.schedule.every(validateScheduleRow)) return false
   if (!validateWeeklyScores(body.weeklyScores)) return false
+  if (body.fourMan != null && !validateFourMan(body.fourMan)) return false
 
   const playerIds = new Set(body.players.map((p) => p.id))
   if (playerIds.size !== body.players.length) return false
@@ -416,6 +448,21 @@ export async function handler(event) {
         return row
       }),
       weeklyScores: body.weeklyScores,
+    }
+    if (body.fourMan != null) {
+      const normHalf = (half) => ({
+        startWeek: Math.floor(half.startWeek),
+        endWeek: Math.floor(half.endWeek),
+        teams: half.teams.map((t) => ({
+          id: t.id,
+          name: String(t.name).trim(),
+          playerIds: [...t.playerIds],
+        })),
+      })
+      normalized.fourMan = {
+        firstHalf: normHalf(body.fourMan.firstHalf),
+        secondHalf: normHalf(body.fourMan.secondHalf),
+      }
     }
     const payload = JSON.stringify(normalized, null, 2)
     try {

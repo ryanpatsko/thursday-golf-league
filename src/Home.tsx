@@ -9,9 +9,10 @@ import GolfOffsTab from './GolfOffsTab.tsx'
 import HandicapsTab from './HandicapsTab.tsx'
 import StandingsTab from './StandingsTab.tsx'
 import WeeklyScoresTab from './WeeklyScoresTab.tsx'
+import FourManTab from './FourManTab.tsx'
 import styles from './Home.module.css'
 
-const HOME_TABS = ['standings', 'weekly', 'handicaps', 'golfOffs', 'courseStats', 'four'] as const
+const HOME_TABS = ['standings', 'weekly', 'four', 'handicaps', 'golfOffs', 'courseStats'] as const
 type HomeTabId = (typeof HOME_TABS)[number]
 
 const TAB_LABELS: Record<HomeTabId, string> = {
@@ -134,7 +135,7 @@ export default function Home() {
             ) : null}
             {activeTab === 'four' ? (
               <div role="tabpanel" className={styles.tabPanel}>
-                <p className={styles.placeholder}>Four man rosters and scores will be posted here soon.</p>
+                <FourManTab data={data} selectedWeek={selectedWeek} onSelectWeek={setSelectedWeek} />
               </div>
             ) : null}
           </div>

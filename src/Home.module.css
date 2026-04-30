@@ -205,64 +205,73 @@
   gap: 1rem;
 }
 
-.standingsTopSplit {
+/* Team standings — centered, shrinks to content width */
+.standingsTeamRow {
+  display: flex;
+  justify-content: center;
+}
+
+.standingsTeamSection {
+  flex: 0 0 auto;
+  min-width: min-content;
+}
+
+/* Table inside the centered team section uses natural (auto) width */
+.standingsTeamTable {
+  width: auto;
+}
+
+.standingsTeamRosterNoWrap {
+  white-space: nowrap;
+}
+
+/* Flight standings — responsive like the team cards grid below */
+.standingsFlights4Grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: 0.85rem;
   align-items: start;
 }
 
-@media (min-width: 900px) {
-  .standingsTopSplit {
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+@media (min-width: 640px) {
+  .standingsFlights4Grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-.standingsTeamHalf {
-  min-width: 0;
-}
-
-.standingsFlightsHalf {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  align-items: start;
-  min-width: 0;
-}
-
-@media (min-width: 900px) {
-  .standingsFlightsHalf {
-    grid-template-columns: 1fr 1fr;
+@media (min-width: 1100px) {
+  .standingsFlights4Grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.65rem;
   }
 
-  .standingsFlightsHalf .standingsSection {
+  .standingsFlights4Grid .standingsSection {
     padding: 0.65rem 0.55rem 0.75rem;
     min-width: 0;
   }
 
-  .standingsFlightsHalf .standingsHeading {
+  .standingsFlights4Grid .standingsHeading {
     font-size: 0.72rem;
     margin-bottom: 0.5rem;
     letter-spacing: 0.06em;
   }
 
-  .standingsFlightsHalf .standingsTable {
+  .standingsFlights4Grid .standingsTable {
     font-size: 0.76rem;
   }
 
-  .standingsFlightsHalf .standingsTable th,
-  .standingsFlightsHalf .standingsTable td {
+  .standingsFlights4Grid .standingsTable th,
+  .standingsFlights4Grid .standingsTable td {
     padding: 0.28rem 0.35rem;
   }
 }
 
 .standingsTeamCell {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.55rem;
+  white-space: nowrap;
 }
 
 .standingsTeamLabel {
@@ -276,6 +285,7 @@
   font-weight: 400;
   letter-spacing: 0.02em;
   text-transform: none;
+  white-space: nowrap;
 }
 
 .standingsRosterNameInline {
@@ -799,7 +809,8 @@
   white-space: nowrap;
 }
 
-.weeklyThNum .weeklySortBtn {
+.weeklyThNum .weeklySortBtn,
+.standingsNum .weeklySortBtn {
   justify-content: center;
 }
 
@@ -985,6 +996,84 @@
   color: var(--muted);
   margin-left: 0.2em;
   white-space: nowrap;
+}
+
+/* —— Four Man tab —— */
+
+/*
+ * HCP column: same solid deep-green as the sticky player name and flight columns.
+ * Higher specificity (.weeklyTable .fourManHcpCell) overrides thead th background.
+ */
+.weeklyTable .fourManHcpCell {
+  background: var(--masters-green-deep);
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.22);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.fourManHoleCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+/* Gold dot — same hue as the senior indicator */
+.fourManStrokeDot {
+  display: block;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+
+/* White circle outline around the team's best score on each hole */
+.fourManBestScore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55em;
+  min-height: 1.55em;
+  padding: 0.05em 0.32em;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  box-sizing: border-box;
+  line-height: 1.2;
+}
+
+/* Team total column — spans all player rows for the team */
+.fourManTotalCell {
+  text-align: center;
+  vertical-align: middle;
+  border-left: 2px solid rgba(255, 204, 0, 0.35);
+  padding: 0.5rem 0.85rem;
+  min-width: 4.5rem;
+  white-space: nowrap;
+}
+
+.fourManTotalScore {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.fourManTotalPar {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.25rem;
+}
+
+/* Overall column — subtle left separator (thinner than the gold one on This Week) */
+.fourManOverallCell {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* —— Golf-offs report —— */

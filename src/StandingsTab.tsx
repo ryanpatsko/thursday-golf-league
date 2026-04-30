@@ -237,17 +237,58 @@ export default function StandingsTab({
   const [historyPlayer, setHistoryPlayer] = useState<Player | null>(null)
   const weeks = useMemo(() => weekNumbersInOrder(data), [data])
 
-  const { teamWeekPts, teamHalfPts, teamsSorted } = useMemo(() => {
+  const [teamSortKey, setTeamSortKey] = useState<'week' | 'total' | null>(null)
+  const [teamSortDir, setTeamSortDir] = useState<'asc' | 'desc'>('asc')
+  const [flightSortKey, setFlightSortKey] = useState<'week' | 'total' | null>(null)
+  const [flightSortDir, setFlightSortDir] = useState<'asc' | 'desc'>('asc')
+
+  function handleTeamSort(key: 'week' | 'total') {
+    if (teamSortKey === key) {
+      if (teamSortDir === 'desc') { setTeamSortKey(null) } else { setTeamSortDir('desc') }
+    } else { setTeamSortKey(key); setTeamSortDir('asc') }
+  }
+
+  function handleFlightSort(key: 'week' | 'total') {
+    if (flightSortKey === key) {
+      if (flightSortDir === 'desc') { setFlightSortKey(null) } else { setFlightSortDir('desc') }
+    } else { setFlightSortKey(key); setFlightSortDir('asc') }
+  }
+
+  function teamSortMark(key: 'week' | 'total') {
+    if (teamSortKey !== key) return null
+    return teamSortDir === 'asc' ? ' ▲' : ' ▼'
+  }
+
+  function flightSortMark(key: 'week' | 'total') {
+    if (flightSortKey !== key) return null
+    return flightSortDir === 'asc' ? ' ▲' : ' ▼'
+  }
+
+  const { teamWeekPts, teamHalfPts } = useMemo(() => {
     const teamWeekPts = teamPointsForWeek(data, selectedWeek)
     const teamHalfPts = teamPointsHalfTotalsThroughWeek(data, selectedWeek)
-    const teamsSorted = [...data.teams].sort((a, b) => {
-      const ta = teamHalfPts.get(a.id) ?? 0
-      const tb = teamHalfPts.get(b.id) ?? 0
-      if (tb !== ta) return tb - ta
-      return a.name.localeCompare(b.name)
-    })
-    return { teamWeekPts, teamHalfPts, teamsSorted }
+    return { teamWeekPts, teamHalfPts }
   }, [data, selectedWeek])
+
+  const sortedTeams = useMemo(() => {
+    const teams = [...data.teams]
+    if (!teamSortKey) {
+      teams.sort((a, b) => {
+        const ta = teamHalfPts.get(a.id) ?? 0
+        const tb = teamHalfPts.get(b.id) ?? 0
+        if (tb !== ta) return tb - ta
+        return a.name.localeCompare(b.name)
+      })
+    } else {
+      teams.sort((a, b) => {
+        const aVal = teamSortKey === 'week' ? (teamWeekPts.get(a.id) ?? 0) : (teamHalfPts.get(a.id) ?? 0)
+        const bVal = teamSortKey === 'week' ? (teamWeekPts.get(b.id) ?? 0) : (teamHalfPts.get(b.id) ?? 0)
+        if (aVal !== bVal) return teamSortDir === 'asc' ? aVal - bVal : bVal - aVal
+        return a.name.localeCompare(b.name)
+      })
+    }
+    return teams
+  }, [data.teams, teamHalfPts, teamWeekPts, teamSortKey, teamSortDir])
 
   const teamsInLeagueOrder = useMemo(
     () => [...data.teams].sort(compareTeamsByLeagueNumber),
@@ -284,6 +325,22 @@ export default function StandingsTab({
     return m
   }, [data.players, flightHalfPointMaps])
 
+  const sortedPlayersByFlight = useMemo(() => {
+    if (!flightSortKey) return playersByFlight
+    const result = {} as Record<FlightId, (typeof data.players)[number][]>
+    for (const f of FLIGHTS) {
+      const players = [...playersByFlight[f]]
+      players.sort((a, b) => {
+        const aVal = flightSortKey === 'week' ? (flightPointMaps[f].get(a.id) ?? 0) : (flightHalfPointMaps[f].get(a.id) ?? 0)
+        const bVal = flightSortKey === 'week' ? (flightPointMaps[f].get(b.id) ?? 0) : (flightHalfPointMaps[f].get(b.id) ?? 0)
+        if (aVal !== bVal) return flightSortDir === 'asc' ? aVal - bVal : bVal - aVal
+        return a.name.localeCompare(b.name)
+      })
+      result[f] = players
+    }
+    return result
+  }, [playersByFlight, flightPointMaps, flightHalfPointMaps, flightSortKey, flightSortDir])
+
   return (
     <div className={styles.standingsRoot}>
       <div className={styles.weekRow}>
@@ -303,23 +360,39 @@ export default function StandingsTab({
         </label>
       </div>
 
-      <div className={styles.standingsTopSplit}>
+      <div className={styles.standingsTeamRow}>
         <section
-          className={`${styles.standingsSection} ${styles.standingsTeamHalf}`}
+          className={`${styles.standingsSection} ${styles.standingsTeamSection}`}
           aria-label="Team standings"
         >
           <h2 className={styles.standingsHeading}>Team standings</h2>
           <div className={styles.standingsTableWrap}>
-            <table className={styles.standingsTable}>
+            <table className={`${styles.standingsTable} ${styles.standingsTeamTable}`}>
               <thead>
                 <tr>
                   <th>Team</th>
-                  <th className={styles.standingsNum}>Week</th>
-                  <th className={styles.standingsNum}>Total</th>
+                  <th className={styles.standingsNum}>
+                    <button
+                      type="button"
+                      className={`${styles.weeklySortBtn} ${teamSortKey === 'week' ? styles.weeklySortBtnActive : ''}`}
+                      onClick={() => handleTeamSort('week')}
+                    >
+                      Week{teamSortMark('week')}
+                    </button>
+                  </th>
+                  <th className={styles.standingsNum}>
+                    <button
+                      type="button"
+                      className={`${styles.weeklySortBtn} ${teamSortKey === 'total' ? styles.weeklySortBtnActive : ''}`}
+                      onClick={() => handleTeamSort('total')}
+                    >
+                      Total{teamSortMark('total')}
+                    </button>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {teamsSorted.map((t) => {
+                {sortedTeams.map((t) => {
                   const teamWeekNet = teamMatchNetTotal(data, t, selectedWeek)
                   return (
                   <tr key={t.id}>
@@ -330,7 +403,9 @@ export default function StandingsTab({
                       </div>
                     </td>
                     <td className={styles.standingsNum}>
-                      {formatStandingPoints(teamWeekPts.get(t.id) ?? 0)}
+                      {teamWeekNet == null
+                        ? '—'
+                        : formatStandingPoints(teamWeekPts.get(t.id) ?? 0)}
                       {teamWeekNet != null ? (
                         <span className={styles.standingsWeekNet}>({teamWeekNet})</span>
                       ) : null}
@@ -343,77 +418,95 @@ export default function StandingsTab({
             </table>
           </div>
         </section>
+      </div>
 
-        <div className={styles.standingsFlightsHalf} aria-label="Flight standings">
-          {FLIGHTS.map((flight) => {
-            const weekPts = flightPointMaps[flight]
-            const halfPts = flightHalfPointMaps[flight]
-            const players = playersByFlight[flight]
-            return (
-              <section
-                key={flight}
-                className={`${styles.standingsSection} ${styles.standingsFlightSection}`}
-                aria-label={`Flight ${flight} standings`}
-              >
-                <div className={styles.standingsFlightBody}>
-                  <span className={styles.standingsFlightWatermark} aria-hidden>
-                    {flight}
-                  </span>
-                  <h2 className={styles.standingsHeading}>Flight {flight} Standings</h2>
-                  <div className={styles.standingsTableWrap}>
-                    <table className={styles.standingsTable}>
-                      <thead>
-                        <tr>
-                          <th>Player</th>
-                          <th className={styles.standingsNum}>Week</th>
-                          <th className={styles.standingsNum}>Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {players.map((p) => {
-                          const selectedWkDate = data.schedule.find((s) => s.leagueWeekNumber === selectedWeek && !s.rainOut)?.date ?? ''
-                          const isPull = isPullRow(data.weeklyScores[p.id]?.[selectedWkDate])
-                          const playerWeekNet = playerNetForWeek(data, p, selectedWeek)
-                          return (
-                          <tr key={p.id}>
-                            <td>
-                              <span className={styles.standingsPlayerNameRow}>
-                                <button
-                                  type="button"
-                                  className={styles.standingsPlayerNameBtn}
-                                  aria-label={`${p.name} season history`}
-                                  onClick={() => setHistoryPlayer(p)}
+      <div className={styles.standingsFlights4Grid} aria-label="Flight standings">
+        {FLIGHTS.map((flight) => {
+          const weekPts = flightPointMaps[flight]
+          const halfPts = flightHalfPointMaps[flight]
+          const players = sortedPlayersByFlight[flight]
+          return (
+            <section
+              key={flight}
+              className={`${styles.standingsSection} ${styles.standingsFlightSection}`}
+              aria-label={`Flight ${flight} standings`}
+            >
+              <div className={styles.standingsFlightBody}>
+                <span className={styles.standingsFlightWatermark} aria-hidden>
+                  {flight}
+                </span>
+                <h2 className={styles.standingsHeading}>Flight {flight} Standings</h2>
+                <div className={styles.standingsTableWrap}>
+                  <table className={styles.standingsTable}>
+                    <thead>
+                      <tr>
+                        <th>Player</th>
+                        <th className={styles.standingsNum}>
+                          <button
+                            type="button"
+                            className={`${styles.weeklySortBtn} ${flightSortKey === 'week' ? styles.weeklySortBtnActive : ''}`}
+                            onClick={() => handleFlightSort('week')}
+                          >
+                            Week{flightSortMark('week')}
+                          </button>
+                        </th>
+                        <th className={styles.standingsNum}>
+                          <button
+                            type="button"
+                            className={`${styles.weeklySortBtn} ${flightSortKey === 'total' ? styles.weeklySortBtnActive : ''}`}
+                            onClick={() => handleFlightSort('total')}
+                          >
+                            Total{flightSortMark('total')}
+                          </button>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {players.map((p) => {
+                        const selectedWkDate = data.schedule.find((s) => s.leagueWeekNumber === selectedWeek && !s.rainOut)?.date ?? ''
+                        const isPull = isPullRow(data.weeklyScores[p.id]?.[selectedWkDate])
+                        const playerWeekNet = playerNetForWeek(data, p, selectedWeek)
+                        return (
+                        <tr key={p.id}>
+                          <td>
+                            <span className={styles.standingsPlayerNameRow}>
+                              <button
+                                type="button"
+                                className={styles.standingsPlayerNameBtn}
+                                aria-label={`${p.name} season history`}
+                                onClick={() => setHistoryPlayer(p)}
+                              >
+                                <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
+                              </button>
+                              {isPull ? (
+                                <span
+                                  className={styles.standingsPullBadge}
+                                  title="Absent — pulled gross from flight"
                                 >
-                                  <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
-                                </button>
-                                {isPull ? (
-                                  <span
-                                    className={styles.standingsPullBadge}
-                                    title="Absent — pulled gross from flight"
-                                  >
-                                    Pull
-                                  </span>
-                                ) : null}
-                              </span>
-                            </td>
-                            <td className={styles.standingsNum}>
-                              {formatStandingPoints(weekPts.get(p.id) ?? 0)}
-                              {playerWeekNet != null ? (
-                                <span className={styles.standingsWeekNet}>({playerWeekNet})</span>
+                                  Pull
+                                </span>
                               ) : null}
-                            </td>
-                            <td className={styles.standingsNum}>{formatStandingPoints(halfPts.get(p.id) ?? 0)}</td>
-                          </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                            </span>
+                          </td>
+                          <td className={styles.standingsNum}>
+                            {playerWeekNet == null && !isPull
+                              ? '—'
+                              : formatStandingPoints(weekPts.get(p.id) ?? 0)}
+                            {playerWeekNet != null ? (
+                              <span className={styles.standingsWeekNet}>({playerWeekNet})</span>
+                            ) : null}
+                          </td>
+                          <td className={styles.standingsNum}>{formatStandingPoints(halfPts.get(p.id) ?? 0)}</td>
+                        </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              </section>
-            )
-          })}
-        </div>
+              </div>
+            </section>
+          )
+        })}
       </div>
 
       <hr className={styles.standingsMainDivider} />
