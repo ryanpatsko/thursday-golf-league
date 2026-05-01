@@ -61,6 +61,22 @@ export async function loadLeagueDataForAdmin(): Promise<{
   }
 }
 
+/**
+ * Fetches only the version number from S3 without downloading the full document.
+ * Used for stale-data detection before a save.
+ */
+export async function fetchCurrentS3Version(): Promise<number | null> {
+  const url = getLeagueDataUrl()
+  try {
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) return null
+    const raw = (await res.json()) as { version?: unknown }
+    return typeof raw?.version === 'number' ? raw.version : null
+  } catch {
+    return null
+  }
+}
+
 export async function saveLeagueData(
   token: string,
   doc: LeagueData,

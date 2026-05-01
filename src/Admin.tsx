@@ -26,7 +26,7 @@ import {
   isAdminAuthConfigured,
 } from './lib/adminAuth.ts'
 import { describeLeagueSaveBlocker } from './lib/leagueSaveValidation.ts'
-import { loadLeagueDataForAdmin, saveLeagueData } from './lib/leagueApi.ts'
+import { fetchCurrentS3Version, loadLeagueDataForAdmin, saveLeagueData } from './lib/leagueApi.ts'
 import { migrateLeagueData } from './lib/migrateLeagueData.ts'
 import styles from './Admin.module.css'
 
@@ -243,6 +243,18 @@ export default function Admin() {
       if (!token) return { ok: false, message: 'Not signed in.' }
       const blocker = describeLeagueSaveBlocker(doc)
       if (blocker) return { ok: false, message: blocker }
+
+      // Stale-data guard: check that we are saving on top of the current S3 version.
+      // If S3 has a higher version than what's in memory, this tab has stale data and
+      // saving would silently overwrite newer changes made in another session.
+      const liveVersion = await fetchCurrentS3Version()
+      if (liveVersion !== null && liveVersion > doc.version) {
+        return {
+          ok: false,
+          message: `Your data is stale (your version: ${doc.version}, live version: ${liveVersion}). Please refresh the page to reload the latest data before saving.`,
+        }
+      }
+
       const next: LeagueData = { ...doc, version: doc.version + 1 }
       const result = await saveLeagueData(token, next)
       if (result.ok) {
