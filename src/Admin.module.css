@@ -116,6 +116,32 @@
   cursor: not-allowed;
 }
 
+.importBtn {
+  cursor: pointer;
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  padding: 0.45rem 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+
+.importBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.importFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .panel {
   padding: 1.25rem 1.5rem 2rem;
 }
