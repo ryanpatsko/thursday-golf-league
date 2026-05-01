@@ -1,11 +1,9 @@
 import {
-  type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
   useCallback,
   useEffect,
   useId,
-  useRef,
   useState,
 } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -27,7 +25,6 @@ import {
 } from './lib/adminAuth.ts'
 import { describeLeagueSaveBlocker } from './lib/leagueSaveValidation.ts'
 import { fetchCurrentS3Version, loadLeagueDataForAdmin, saveLeagueData } from './lib/leagueApi.ts'
-import { migrateLeagueData } from './lib/migrateLeagueData.ts'
 import styles from './Admin.module.css'
 
 type GateState = 'checking' | 'locked' | 'unlocked'
@@ -278,53 +275,6 @@ export default function Admin() {
     }
   }
 
-  const importFileRef = useRef<HTMLInputElement>(null)
-
-  async function onImportFile(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (importFileRef.current) importFileRef.current.value = ''
-    if (!file) return
-    setSaveMsg(null)
-    setBusy(true)
-    try {
-      let raw: unknown
-      try {
-        raw = JSON.parse(await file.text()) as unknown
-      } catch {
-        setSaveMsg('Import failed: file is not valid JSON.')
-        return
-      }
-      if (!raw || typeof raw !== 'object' || !Array.isArray((raw as Record<string, unknown>).players)) {
-        setSaveMsg('Import failed: file does not look like a league data document.')
-        return
-      }
-      const imported = migrateLeagueData(raw as LeagueData)
-      const blocker = describeLeagueSaveBlocker(imported)
-      if (blocker) {
-        setSaveMsg(`Import blocked: ${blocker}`)
-        return
-      }
-      const currentVersion = league?.version ?? 0
-      const nextVersion = Math.max(currentVersion, imported.version) + 1
-      const next: LeagueData = { ...imported, version: nextVersion }
-      const token = getStoredSessionToken()
-      if (!token) {
-        setSaveMsg('Import failed: not signed in.')
-        return
-      }
-      const result = await saveLeagueData(token, next)
-      if (result.ok) {
-        setLeague(next)
-        setSelectedWeek(defaultLeagueWeekNumber(next))
-        setSaveMsg(`Imported and saved (version ${nextVersion}).`)
-      } else {
-        setSaveMsg(`Import save failed: ${result.message}`)
-      }
-    } finally {
-      setBusy(false)
-    }
-  }
-
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
@@ -353,25 +303,8 @@ export default function Admin() {
               <button type="button" className={styles.saveBtn} disabled={busy} onClick={() => void onSave()}>
                 Save Values
               </button>
-              <button
-                type="button"
-                className={styles.importBtn}
-                disabled={busy}
-                onClick={() => importFileRef.current?.click()}
-              >
-                Import JSON
-              </button>
-              <input
-                ref={importFileRef}
-                type="file"
-                accept=".json,application/json"
-                className={styles.importFileInput}
-                tabIndex={-1}
-                aria-hidden
-                onChange={(e) => void onImportFile(e)}
-              />
               {saveMsg ? (
-                <span className={saveMsg.startsWith('Saved') || saveMsg.startsWith('Imported') ? styles.statusOk : styles.statusErr}>
+                <span className={saveMsg.startsWith('Saved') ? styles.statusOk : styles.statusErr}>
                   {saveMsg}
                 </span>
               ) : null}
