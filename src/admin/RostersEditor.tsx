@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { FlightId, LeagueData, Player, Team } from '../data/leagueTypes'
 import { describeLeagueSaveBlocker } from '../lib/leagueSaveValidation'
 import styles from './editors.module.css'
@@ -53,6 +54,33 @@ export default function RostersEditor({
     ids[slot] = pick
     row.playerIds = ids
     setTeams(teams)
+  }
+
+  // Tracks the raw string being typed for each player's prior-scores field.
+  // Keeps commas visible while the user is mid-entry; committed on blur.
+  const [priorDraft, setPriorDraft] = useState<Map<string, string>>(new Map())
+
+  function getPriorDisplay(p: Player): string {
+    return priorDraft.has(p.id) ? (priorDraft.get(p.id) ?? '') : p.priorSeasonScores.join(', ')
+  }
+
+  function onPriorChange(p: Player, raw: string) {
+    setPriorDraft((prev) => new Map(prev).set(p.id, raw))
+  }
+
+  function onPriorBlur(p: Player, raw: string) {
+    const nums = raw
+      .split(/[,\s]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter((n) => Number.isFinite(n))
+    setPlayers(data.players.map((x) => (x.id === p.id ? { ...x, priorSeasonScores: nums.slice(0, 20) } : x)))
+    setPriorDraft((prev) => {
+      const m = new Map(prev)
+      m.delete(p.id)
+      return m
+    })
   }
 
   const saveBlocker = describeLeagueSaveBlocker(data)
@@ -182,20 +210,9 @@ export default function RostersEditor({
                 <td>
                   <input
                     className={styles.inputWide}
-                    value={p.priorSeasonScores.join(',')}
-                    onChange={(e) => {
-                      const raw = e.target.value
-                      const parts = raw
-                        .split(/[, ]+/)
-                        .map((s) => s.trim())
-                        .filter(Boolean)
-                      const nums = parts.map((x) => Number(x)).filter((n) => Number.isFinite(n))
-                      setPlayers(
-                        data.players.map((x) =>
-                          x.id === p.id ? { ...x, priorSeasonScores: nums.slice(0, 20) } : x,
-                        ),
-                      )
-                    }}
+                    value={getPriorDisplay(p)}
+                    onChange={(e) => onPriorChange(p, e.target.value)}
+                    onBlur={(e) => onPriorBlur(p, e.target.value)}
                   />
                 </td>
               </tr>
