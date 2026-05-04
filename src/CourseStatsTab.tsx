@@ -3,6 +3,7 @@ import type { LeagueData } from './data/leagueTypes'
 import { weekNumbersInOrder, weekSelectLabel } from './lib/scheduleWeek'
 import styles from './Home.module.css'
 
+type TeeFilter = 'white' | 'gold'
 type RowKey = 'eagleOrBetter' | 'birdie' | 'par' | 'bogey' | 'double' | 'tripleOrWorse'
 
 const ROW_KEYS: RowKey[] = ['eagleOrBetter', 'birdie', 'par', 'bogey', 'double', 'tripleOrWorse']
@@ -86,6 +87,7 @@ function buildRankMap(statsMap: Map<number, HoleBuckets>, holes: number[]): Map<
 function computeStats(
   data: LeagueData,
   filterWeek: number | null,
+  tee: TeeFilter,
 ): { front: Map<number, HoleBuckets>; back: Map<number, HoleBuckets> } {
   const front = new Map<number, HoleBuckets>()
   const back = new Map<number, HoleBuckets>()
@@ -101,6 +103,10 @@ function computeStats(
     const statsMap = nine === 'front' ? front : back
 
     for (const player of data.players) {
+      // Filter to only the selected tee
+      if (tee === 'white' && player.isSenior) continue
+      if (tee === 'gold' && !player.isSenior) continue
+
       const scoreRow = data.weeklyScores[player.id]?.[sched.date]
       if (!scoreRow) continue
 
@@ -143,18 +149,15 @@ function NineTable({
   statsMap,
   holeStart,
   title,
-  fullCourseRank,
-  courseHcp,
+  leagueHcp,
 }: {
   statsMap: Map<number, HoleBuckets>
   holeStart: number
   title: string
-  fullCourseRank: Map<number, number>
-  courseHcp: Map<number, number>
+  leagueHcp: Map<number, number>
 }) {
   const holes = Array.from({ length: 9 }, (_, i) => holeStart + i)
   const hasData = holes.some((h) => (statsMap.get(h)?.total ?? 0) > 0)
-  const nineHcpLabel = holeStart === 1 ? 'Front 9 Handicap' : 'Back 9 Handicap'
 
   // Aggregate all holes into a single bucket for the Total column
   const nineTotals = emptyBuckets()
@@ -232,7 +235,7 @@ function NineTable({
                   </td>
                 </tr>
                 <tr className={styles.courseStatsHcpRow}>
-                  <td className={styles.courseStatsScoreLabel}>{nineHcpLabel}</td>
+                  <td className={styles.courseStatsScoreLabel}>Current Season Handicap</td>
                   {holes.map((h) => {
                     const rank = hcpRank.get(h)
                     return (
@@ -246,26 +249,12 @@ function NineTable({
                   </td>
                 </tr>
                 <tr className={styles.courseStatsHcpRow}>
-                  <td className={styles.courseStatsScoreLabel}>18 Hole Handicap (League)</td>
+                  <td className={styles.courseStatsScoreLabel}>Official League Handicap</td>
                   {holes.map((h) => {
-                    const rank = fullCourseRank.get(h)
+                    const lhcp = leagueHcp.get(h)
                     return (
-                      <td key={h} className={`${styles.courseStatsHoleCol} ${rank != null ? styles.courseStatsHcpRank : ''}`}>
-                        {rank ?? <span className={styles.courseStatsDash}>—</span>}
-                      </td>
-                    )
-                  })}
-                  <td className={styles.courseStatsTotalCol}>
-                    <span className={styles.courseStatsDash}>—</span>
-                  </td>
-                </tr>
-                <tr className={styles.courseStatsHcpRow}>
-                  <td className={styles.courseStatsScoreLabel}>18 Hole Handicap (Course)</td>
-                  {holes.map((h) => {
-                    const official = courseHcp.get(h)
-                    return (
-                      <td key={h} className={`${styles.courseStatsHoleCol} ${official != null ? styles.courseStatsHcpCourse : ''}`}>
-                        {official ?? <span className={styles.courseStatsDash}>—</span>}
+                      <td key={h} className={`${styles.courseStatsHoleCol} ${lhcp != null ? styles.courseStatsHcpCourse : ''}`}>
+                        {lhcp ?? <span className={styles.courseStatsDash}>—</span>}
                       </td>
                     )
                   })}
@@ -292,23 +281,26 @@ function NineTable({
 
 export default function CourseStatsTab({ data }: { data: LeagueData }) {
   const [filterWeek, setFilterWeek] = useState<number | null>(null)
+  const [tee, setTee] = useState<TeeFilter>('white')
   const weeks = weekNumbersInOrder(data)
-  const { front, back } = useMemo(() => computeStats(data, filterWeek), [data, filterWeek])
 
-  // Combined 18-hole rank map built from both nines
-  const fullCourseRank = useMemo(() => {
-    const allHoles = new Map<number, HoleBuckets>([...front, ...back])
-    return buildRankMap(allHoles, Array.from({ length: 18 }, (_, i) => i + 1))
-  }, [front, back])
+  const { front, back } = useMemo(
+    () => computeStats(data, filterWeek, tee),
+    [data, filterWeek, tee],
+  )
 
-  // Official course handicap (stroke index) per hole number from the admin-configured course data
-  const courseHcp = useMemo(() => {
+  /** League handicap per display hole number (1–9 front, 10–18 back) for the selected tee. */
+  const leagueHcp = useMemo(() => {
     const map = new Map<number, number>()
-    const c = data.course.nonSenior
-    for (const hole of c.front.holes) map.set(hole.holeNumber, hole.strokeIndex)
-    for (const hole of c.back.holes) map.set(hole.holeNumber, hole.strokeIndex)
+    const c = tee === 'white' ? data.course.nonSenior : data.course.senior
+    c.front.holes.forEach((hole, i) => {
+      if (hole.leagueHandicap != null) map.set(i + 1, hole.leagueHandicap)
+    })
+    c.back.holes.forEach((hole, i) => {
+      if (hole.leagueHandicap != null) map.set(i + 10, hole.leagueHandicap)
+    })
     return map
-  }, [data.course])
+  }, [data.course, tee])
 
   return (
     <div className={styles.courseStatsRoot}>
@@ -331,10 +323,27 @@ export default function CourseStatsTab({ data }: { data: LeagueData }) {
             ))}
           </select>
         </label>
+
+        <div className={styles.courseTeeToggle} role="group" aria-label="Tee selection">
+          <button
+            type="button"
+            className={`${styles.courseTeeBtn} ${tee === 'white' ? styles.courseTeeBtnActive : ''}`}
+            onClick={() => setTee('white')}
+          >
+            White tees
+          </button>
+          <button
+            type="button"
+            className={`${styles.courseTeeBtn} ${tee === 'gold' ? styles.courseTeeBtnActive : ''}`}
+            onClick={() => setTee('gold')}
+          >
+            Gold tees
+          </button>
+        </div>
       </div>
 
-      <NineTable statsMap={front} holeStart={1} title="Front Nine" fullCourseRank={fullCourseRank} courseHcp={courseHcp} />
-      <NineTable statsMap={back} holeStart={10} title="Back Nine" fullCourseRank={fullCourseRank} courseHcp={courseHcp} />
+      <NineTable statsMap={front} holeStart={1} title="Front Nine" leagueHcp={leagueHcp} />
+      <NineTable statsMap={back} holeStart={10} title="Back Nine" leagueHcp={leagueHcp} />
     </div>
   )
 }

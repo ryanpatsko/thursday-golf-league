@@ -41,7 +41,8 @@ function resolveActiveHalf(
 }
 
 function isStrokeHole(hole: HoleDef, strokes: number): boolean {
-  return strokes > 0 && hole.strokeIndex <= strokes
+  const hcp = hole.leagueHandicap ?? hole.strokeIndex
+  return strokes > 0 && hcp <= strokes
 }
 
 function formatRelToPar(rel: number): string {
@@ -180,6 +181,15 @@ export default function FourManTab({
     [data, selectedWeek],
   )
 
+  /** Lowest handicap index among all league players this week (the baseline for stroke allocation). */
+  const minHcp = useMemo(() => {
+    let min: number | null = null
+    for (const { hcp } of playerStatsMap.values()) {
+      if (hcp != null && (min === null || hcp < min)) min = hcp
+    }
+    return min
+  }, [playerStatsMap])
+
   /**
    * For each team: per-hole winner + this-week team total and relative-to-par.
    */
@@ -309,6 +319,8 @@ export default function FourManTab({
 
   const whiteHoles =
     scheduledNine != null ? data.course.nonSenior[scheduledNine].holes : []
+  const goldHoles =
+    scheduledNine != null ? data.course.senior[scheduledNine].holes : []
 
   const nineLabel =
     scheduledNine === 'front' ? 'Front nine' : scheduledNine === 'back' ? 'Back nine' : null
@@ -346,24 +358,25 @@ export default function FourManTab({
             {halfLabel}
             <span className={styles.weeklyMetaSep}> · </span>
             {nineLabel}
+            {minHcp != null ? (
+              <>
+                <span className={styles.weeklyMetaSep}> · </span>
+                <span>Low HCP: {minHcp}</span>
+              </>
+            ) : null}
           </p>
 
           <div className={styles.weeklyTableWrap}>
             <table className={styles.weeklyTable}>
               <thead>
+                {/* Row 1 — hole numbers */}
                 <tr>
-                  {/* Blank player-name header */}
-                  <th rowSpan={2} scope="col" className={styles.weeklyStickyCol} />
-                  <th rowSpan={2} scope="col" className={styles.weeklyThFlight}>
+                  <th rowSpan={3} scope="col" className={styles.weeklyStickyCol} />
+                  <th rowSpan={3} scope="col" className={styles.weeklyThFlight}>
                     Fl
                   </th>
-                  <th
-                    rowSpan={2}
-                    scope="col"
-                    className={styles.weeklyThNum}
-                    title="9-hole handicap index for this week"
-                  >
-                    HCP
+                  <th scope="col" className={`${styles.weeklyThNum} ${styles.fourManHcpRowLabel}`}>
+                    Hole
                   </th>
                   {whiteHoles.map((_, i) => (
                     <th key={i} scope="col" className={styles.weeklyThHole}>
@@ -371,7 +384,7 @@ export default function FourManTab({
                     </th>
                   ))}
                   <th
-                    rowSpan={2}
+                    rowSpan={3}
                     scope="col"
                     className={`${styles.weeklyThNum} ${styles.weeklyThSep}`}
                   >
@@ -384,7 +397,7 @@ export default function FourManTab({
                     </button>
                   </th>
                   <th
-                    rowSpan={2}
+                    rowSpan={3}
                     scope="col"
                     className={`${styles.weeklyThNum} ${styles.weeklyThSepLeft}`}
                   >
@@ -397,10 +410,41 @@ export default function FourManTab({
                     </button>
                   </th>
                 </tr>
+                {/* Row 2 — white tee league handicap */}
                 <tr>
+                  <th
+                    scope="col"
+                    className={`${styles.weeklyThNum} ${styles.fourManWhiteHcpHeader} ${styles.fourManHcpRowLabel}`}
+                  >
+                    HCP-W
+                  </th>
                   {whiteHoles.map((h, i) => (
-                    <th key={i} scope="col" className={styles.weeklyThPar}>
-                      {h.strokeIndex}
+                    <th
+                      key={i}
+                      scope="col"
+                      className={`${styles.weeklyThPar} ${styles.fourManWhiteHcpHeader}`}
+                      title="White tee league handicap"
+                    >
+                      {h.leagueHandicap ?? '—'}
+                    </th>
+                  ))}
+                </tr>
+                {/* Row 3 — gold tee league handicap */}
+                <tr>
+                  <th
+                    scope="col"
+                    className={`${styles.weeklyThNum} ${styles.fourManGoldHcpHeader} ${styles.fourManHcpRowLabel}`}
+                  >
+                    HCP-G
+                  </th>
+                  {goldHoles.map((h, i) => (
+                    <th
+                      key={i}
+                      scope="col"
+                      className={`${styles.weeklyThPar} ${styles.fourManGoldHcpHeader}`}
+                      title="Gold tee league handicap"
+                    >
+                      {h.leagueHandicap ?? '—'}
                     </th>
                   ))}
                 </tr>

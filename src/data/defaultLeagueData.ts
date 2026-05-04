@@ -6,30 +6,44 @@ import { slugifyName } from '../lib/slug'
 export const LAKEVUE_NORTH_FRONT_HCP = [8, 6, 1, 17, 7, 16, 15, 11, 2] as const
 export const LAKEVUE_NORTH_BACK_HCP = [18, 10, 9, 12, 3, 13, 5, 4, 14] as const
 
+/** League handicap ranks (1–9 per nine) for White tees (non-senior). */
+export const LAKEVUE_NORTH_WHITE_FRONT_LEAGUE_HCP = [5, 3, 1, 9, 4, 8, 7, 6, 2] as const
+export const LAKEVUE_NORTH_WHITE_BACK_LEAGUE_HCP = [9, 5, 4, 6, 1, 7, 3, 2, 8] as const
+
+/** League handicap ranks (1–9 per nine) for Gold tees (senior). */
+export const LAKEVUE_NORTH_GOLD_FRONT_LEAGUE_HCP = [4, 3, 8, 7, 1, 6, 9, 5, 2] as const
+export const LAKEVUE_NORTH_GOLD_BACK_LEAGUE_HCP = [7, 5, 3, 6, 9, 4, 8, 1, 2] as const
+
 function isLakevueNorthName(name: string): boolean {
   return name.trim().toLowerCase() === 'lakevue north'
 }
 
-/** Overwrites handicap indexes (1–18) and nine labels for Lakevue North — fixes stale S3 JSON. */
+/** Overwrites handicap indexes (1–18), league handicap (1–9), and nine labels for Lakevue North — fixes stale S3 JSON. */
 export function ensureLakevueNorthHandicapsAndLabels(course: Course): Course {
   if (!isLakevueNorthName(course.name)) return course
-  const patchNine = (nine: CourseNine, hcp: readonly number[], label: string): CourseNine => ({
+  const patchNine = (
+    nine: CourseNine,
+    hcp: readonly number[],
+    leagueHcp: readonly number[],
+    label: string,
+  ): CourseNine => ({
     ...nine,
     label,
     holes: nine.holes.map((h, i) => ({
       ...h,
       strokeIndex: hcp[i] ?? h.strokeIndex,
+      leagueHandicap: leagueHcp[i] ?? h.leagueHandicap,
     })),
   })
   return {
     ...course,
     nonSenior: {
-      front: patchNine(course.nonSenior.front, LAKEVUE_NORTH_FRONT_HCP, 'White - Front 9'),
-      back: patchNine(course.nonSenior.back, LAKEVUE_NORTH_BACK_HCP, 'White - Back 9'),
+      front: patchNine(course.nonSenior.front, LAKEVUE_NORTH_FRONT_HCP, LAKEVUE_NORTH_WHITE_FRONT_LEAGUE_HCP, 'White - Front 9'),
+      back: patchNine(course.nonSenior.back, LAKEVUE_NORTH_BACK_HCP, LAKEVUE_NORTH_WHITE_BACK_LEAGUE_HCP, 'White - Back 9'),
     },
     senior: {
-      front: patchNine(course.senior.front, LAKEVUE_NORTH_FRONT_HCP, 'Gold - Front 9'),
-      back: patchNine(course.senior.back, LAKEVUE_NORTH_BACK_HCP, 'Gold - Back 9'),
+      front: patchNine(course.senior.front, LAKEVUE_NORTH_FRONT_HCP, LAKEVUE_NORTH_GOLD_FRONT_LEAGUE_HCP, 'Gold - Front 9'),
+      back: patchNine(course.senior.back, LAKEVUE_NORTH_BACK_HCP, LAKEVUE_NORTH_GOLD_BACK_LEAGUE_HCP, 'Gold - Back 9'),
     },
   }
 }
@@ -38,12 +52,14 @@ function mkHoles(
   pars: readonly number[],
   yards: readonly number[],
   stroke: readonly number[],
+  leagueHcp: readonly number[],
 ) {
   return pars.map((par, i) => ({
     holeNumber: i + 1,
     par,
     yardage: yards[i] ?? 350,
     strokeIndex: stroke[i] ?? 1,
+    leagueHandicap: leagueHcp[i] ?? 1,
   }))
 }
 
@@ -58,11 +74,11 @@ export function lakevueNorthSeniorHalves(): { front: CourseNine; back: CourseNin
   return {
     front: {
       label: 'Gold - Front 9',
-      holes: mkHoles(frontPars, frontYardsGold, LAKEVUE_NORTH_FRONT_HCP),
+      holes: mkHoles(frontPars, frontYardsGold, LAKEVUE_NORTH_FRONT_HCP, LAKEVUE_NORTH_GOLD_FRONT_LEAGUE_HCP),
     },
     back: {
       label: 'Gold - Back 9',
-      holes: mkHoles(backPars, backYardsGold, LAKEVUE_NORTH_BACK_HCP),
+      holes: mkHoles(backPars, backYardsGold, LAKEVUE_NORTH_BACK_HCP, LAKEVUE_NORTH_GOLD_BACK_LEAGUE_HCP),
     },
   }
 }
@@ -80,11 +96,11 @@ function lakevueNorthCourse(): Course {
     nonSenior: {
       front: {
         label: 'White - Front 9',
-        holes: mkHoles(frontPars, frontYardsWhite, LAKEVUE_NORTH_FRONT_HCP),
+        holes: mkHoles(frontPars, frontYardsWhite, LAKEVUE_NORTH_FRONT_HCP, LAKEVUE_NORTH_WHITE_FRONT_LEAGUE_HCP),
       },
       back: {
         label: 'White - Back 9',
-        holes: mkHoles(backParsWhite, backYardsWhite, LAKEVUE_NORTH_BACK_HCP),
+        holes: mkHoles(backParsWhite, backYardsWhite, LAKEVUE_NORTH_BACK_HCP, LAKEVUE_NORTH_WHITE_BACK_LEAGUE_HCP),
       },
     },
     senior: lakevueNorthSeniorHalves(),
@@ -208,6 +224,17 @@ const seedSchedule = buildSchedule(iso, 19)
 const lastIdx = seedSchedule.length - 1
 seedSchedule[lastIdx] = { ...seedSchedule[lastIdx]!, label: 'Playoffs' }
 
+const seedFourManTeams = [
+  { id: 'fm-h1-1', name: 'Team 1', playerIds: ['craig-pelat', 'john-defilippo', 'harry-wilson', 'jim-kelly'] },
+  { id: 'fm-h1-2', name: 'Team 2', playerIds: ['bob-bartley', 'tom-ehrenberger', 'ryan-patsko', 'george-schurer'] },
+  { id: 'fm-h1-3', name: 'Team 3', playerIds: ['bill-semler', 'bill-schneider', 'tom-mcgaughey', 'gerry-beglinger'] },
+  { id: 'fm-h1-4', name: 'Team 4', playerIds: ['mick-pappas', 'dave-moran', 'mike-sullivan', 'john-watts'] },
+  { id: 'fm-h1-5', name: 'Team 5', playerIds: ['bill-ross', 'ed-stefanowicz', 'denny-notareschi', 'erv-sullivan'] },
+  { id: 'fm-h1-6', name: 'Team 6', playerIds: ['jeff-bastin', 'bill-jacobs', 'john-sleighter', 'george-trusik'] },
+  { id: 'fm-h1-7', name: 'Team 7', playerIds: ['jeff-aiken', 'justin-gray', 'jim-boyd', 'steve-piotrowski'] },
+  { id: 'fm-h1-8', name: 'Team 8', playerIds: ['jim-shankel', 'scott-shankel', 'adam-fisher', 'bill-leja'] },
+]
+
 export const defaultLeagueData: LeagueData = {
   version: 1,
   meta: {
@@ -221,6 +248,18 @@ export const defaultLeagueData: LeagueData = {
   teams: seedTeams,
   schedule: seedSchedule,
   weeklyScores: {},
+  fourMan: {
+    firstHalf: {
+      startWeek: 1,
+      endWeek: 9,
+      teams: seedFourManTeams,
+    },
+    secondHalf: {
+      startWeek: 10,
+      endWeek: 19,
+      teams: seedFourManTeams.map((t) => ({ ...t, id: t.id.replace('h1', 'h2') })),
+    },
+  },
 }
 
 /** For migrating older JSON that omits `isSenior`. */

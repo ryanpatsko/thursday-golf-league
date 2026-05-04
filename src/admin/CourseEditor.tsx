@@ -92,6 +92,23 @@ export default function CourseEditor({
             }
           />
         </td>
+        <td>
+          <input
+            className={styles.inputNarrow}
+            type="number"
+            min={1}
+            max={9}
+            value={h.leagueHandicap ?? ''}
+            onChange={(e) =>
+              onChange({
+                ...data,
+                course: updateHole(course, tee, side, index, {
+                  leagueHandicap: Number(e.target.value),
+                }),
+              })
+            }
+          />
+        </td>
       </tr>
     )
   }
@@ -110,7 +127,8 @@ export default function CourseEditor({
                 <th>Hole</th>
                 <th>Par</th>
                 <th>Yards</th>
-                <th>Hcp 1–18</th>
+                <th>Course Hcp</th>
+                <th>League Hcp 1–9</th>
               </tr>
             </thead>
             <tbody>{nine.holes.map((h, i) => holeRow(tee, side, h, i))}</tbody>

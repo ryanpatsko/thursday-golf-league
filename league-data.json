@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "meta": {
     "seasonYear": 2026,
     "seasonStartDate": "2026-04-16",
@@ -931,5 +931,35 @@
       "label": "Playoffs"
     }
   ],
-  "weeklyScores": {}
+  "weeklyScores": {},
+  "fourMan": {
+    "firstHalf": {
+      "startWeek": 1,
+      "endWeek": 9,
+      "teams": [
+        { "id": "fm-h1-1", "name": "Team 1", "playerIds": ["craig-pelat", "john-defilippo", "harry-wilson", "jim-kelly"] },
+        { "id": "fm-h1-2", "name": "Team 2", "playerIds": ["bob-bartley", "tom-ehrenberger", "ryan-patsko", "george-schurer"] },
+        { "id": "fm-h1-3", "name": "Team 3", "playerIds": ["bill-semler", "bill-schneider", "tom-mcgaughey", "gerry-beglinger"] },
+        { "id": "fm-h1-4", "name": "Team 4", "playerIds": ["mick-pappas", "dave-moran", "mike-sullivan", "john-watts"] },
+        { "id": "fm-h1-5", "name": "Team 5", "playerIds": ["bill-ross", "ed-stefanowicz", "denny-notareschi", "erv-sullivan"] },
+        { "id": "fm-h1-6", "name": "Team 6", "playerIds": ["jeff-bastin", "bill-jacobs", "john-sleighter", "george-trusik"] },
+        { "id": "fm-h1-7", "name": "Team 7", "playerIds": ["jeff-aiken", "justin-gray", "jim-boyd", "steve-piotrowski"] },
+        { "id": "fm-h1-8", "name": "Team 8", "playerIds": ["jim-shankel", "scott-shankel", "adam-fisher", "bill-leja"] }
+      ]
+    },
+    "secondHalf": {
+      "startWeek": 10,
+      "endWeek": 19,
+      "teams": [
+        { "id": "fm-h2-1", "name": "Team 1", "playerIds": ["craig-pelat", "john-defilippo", "harry-wilson", "jim-kelly"] },
+        { "id": "fm-h2-2", "name": "Team 2", "playerIds": ["bob-bartley", "tom-ehrenberger", "ryan-patsko", "george-schurer"] },
+        { "id": "fm-h2-3", "name": "Team 3", "playerIds": ["bill-semler", "bill-schneider", "tom-mcgaughey", "gerry-beglinger"] },
+        { "id": "fm-h2-4", "name": "Team 4", "playerIds": ["mick-pappas", "dave-moran", "mike-sullivan", "john-watts"] },
+        { "id": "fm-h2-5", "name": "Team 5", "playerIds": ["bill-ross", "ed-stefanowicz", "denny-notareschi", "erv-sullivan"] },
+        { "id": "fm-h2-6", "name": "Team 6", "playerIds": ["jeff-bastin", "bill-jacobs", "john-sleighter", "george-trusik"] },
+        { "id": "fm-h2-7", "name": "Team 7", "playerIds": ["jeff-aiken", "justin-gray", "jim-boyd", "steve-piotrowski"] },
+        { "id": "fm-h2-8", "name": "Team 8", "playerIds": ["jim-shankel", "scott-shankel", "adam-fisher", "bill-leja"] }
+      ]
+    }
+  }
 }

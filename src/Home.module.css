@@ -26,6 +26,13 @@
   margin: 0 auto;
 }
 
+@media (max-width: 639px) {
+  .page {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
 .accentBar {
   position: fixed;
   left: 0;
@@ -192,6 +199,13 @@
   background: rgba(0, 0, 0, 0.1);
 }
 
+@media (max-width: 639px) {
+  .tabPanel {
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
+  }
+}
+
 .placeholder {
   margin: 0;
   color: var(--muted);
@@ -213,7 +227,8 @@
 
 .standingsTeamSection {
   flex: 0 0 auto;
-  min-width: min-content;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Table inside the centered team section uses natural (auto) width */
@@ -286,6 +301,28 @@
   letter-spacing: 0.02em;
   text-transform: none;
   white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .standingsTeamCell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    white-space: normal;
+  }
+
+  .standingsTeamRoster {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    white-space: normal;
+    font-size: 0.6rem;
+  }
+
+  .standingsRosterNameInline {
+    white-space: nowrap;
+    flex-wrap: nowrap;
+  }
 }
 
 .standingsRosterNameInline {
@@ -898,6 +935,13 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+@media (max-width: 639px) {
+  .standingsSection {
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+}
+
 /* Flight cards: large translucent letter behind heading + table */
 .standingsFlightBody {
   position: relative;
@@ -999,6 +1043,28 @@
 }
 
 /* —— Four Man tab —— */
+
+/* Label cell in the HCP column for each handicap header row (Hole / HCP-W / HCP-G) */
+.weeklyTable thead th.fourManHcpRowLabel {
+  text-align: center;
+  white-space: nowrap;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+}
+
+/* White tee league handicap header row — slightly muted opacity to distinguish from hole numbers */
+.weeklyTable thead th.fourManWhiteHcpHeader {
+  opacity: 0.75;
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+}
+
+/* Gold tee league handicap header row — gold text to match gold tee identity */
+.weeklyTable thead th.fourManGoldHcpHeader {
+  color: var(--gold);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+}
 
 /*
  * HCP column: same solid deep-green as the sticky player name and flight columns.
@@ -1360,6 +1426,42 @@
 .courseStatsToolbar {
   display: flex;
   align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.courseTeeToggle {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.courseTeeBtn {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.courseTeeBtn + .courseTeeBtn {
+  border-left: 1px solid var(--line);
+}
+
+.courseTeeBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--cream);
+}
+
+.courseTeeBtnActive {
+  background: var(--masters-green-deep);
+  color: var(--cream);
 }
 
 .courseStatsNine {

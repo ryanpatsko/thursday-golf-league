@@ -1,5 +1,4 @@
 import type {
-  FlightId,
   FourManConfig,
   FourManHalf,
   FourManTeam,
@@ -8,7 +7,6 @@ import type {
 import { describeFourManSaveBlocker } from '../lib/leagueSaveValidation'
 import styles from './editors.module.css'
 
-const FLIGHTS: FlightId[] = ['A', 'B', 'C', 'D']
 
 function makeUniqueTeamId(existingIds: Set<string>, halfKey: string): string {
   let i = 1
@@ -118,8 +116,8 @@ function HalfEditor({ half, halfKey, label, allTeamIds, players, onChange }: Hal
             <thead>
               <tr>
                 <th>Team Name</th>
-                {FLIGHTS.map((f) => (
-                  <th key={f}>Flight {f}</th>
+                {[1, 2, 3, 4].map((n) => (
+                  <th key={n}>Player {n}</th>
                 ))}
                 <th />
               </tr>
@@ -134,18 +132,17 @@ function HalfEditor({ half, halfKey, label, allTeamIds, players, onChange }: Hal
                       onChange={(e) => onTeamNameChange(teamIndex, e.target.value)}
                     />
                   </td>
-                  {FLIGHTS.map((f, slot) => {
+                  {[0, 1, 2, 3].map((slot) => {
                     const pid = t.playerIds[slot] ?? ''
-                    const options = players.filter((p) => p.flight === f)
                     return (
-                      <td key={f}>
+                      <td key={slot}>
                         <select
                           className={styles.inputWide}
                           value={pid}
                           onChange={(e) => onTeamSlotChange(teamIndex, slot, e.target.value)}
                         >
                           <option value="">—</option>
-                          {options.map((p) => (
+                          {players.map((p) => (
                             <option key={p.id} value={p.id}>
                               {p.name}
                             </option>
@@ -204,11 +201,6 @@ export default function FourManEditor({
 
   return (
     <div className={styles.stack}>
-      <p className={styles.help}>
-        Four Man teams are a separate contest using the same weekly scores. Each team has one player
-        from each flight (A–D). Set separate rosters and week ranges for each half of the season.
-        Players can be on different teams in each half.
-      </p>
       {blocker ? <div className={styles.warnBox}>{blocker}</div> : null}
       <HalfEditor
         half={config.firstHalf}

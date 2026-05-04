@@ -28,16 +28,12 @@ export function describeFourManSaveBlocker(
       }
       for (let i = 0; i < 4; i++) {
         const pid = t.playerIds[i]
-        const want = FLIGHT_SLOTS[i]
         if (!pid || !SLUG_RE.test(pid)) {
-          return `Four Man ${label}: team "${t.name}" has an empty Flight ${want} slot.`
+          return `Four Man ${label}: team "${t.name}" has an empty player ${i + 1} slot.`
         }
         const pl = data.players.find((p) => p.id === pid)
         if (!pl) {
           return `Four Man ${label}: team "${t.name}" references missing player id "${pid}".`
-        }
-        if (pl.flight !== want) {
-          return `Four Man ${label}: in "${t.name}", ${pl.name} must be flight ${want} for column ${i + 1}.`
         }
         if (seenInHalf.has(pid)) {
           return `Four Man ${label}: ${pl.name} appears on more than one team.`

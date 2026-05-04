@@ -1,12 +1,14 @@
-﻿export type FlightId = 'A' | 'B' | 'C' | 'D'
+export type FlightId = 'A' | 'B' | 'C' | 'D'
 export type NineSide = 'front' | 'back'
 
 export interface HoleDef {
   holeNumber: number
   par: number
   yardage: number
-  /** Handicap hole rank from the scorecard (1–18 for this course), not renumbered per nine. */
+  /** Course handicap hole rank from the scorecard (1–18 for this course), not renumbered per nine. */
   strokeIndex: number
+  /** League handicap rank for this nine (1–9). May differ between White and Gold tees. */
+  leagueHandicap?: number
 }
 
 export interface CourseNine {
