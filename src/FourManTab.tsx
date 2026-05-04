@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import type { FourManConfig, FourManHalf, HoleDef, LeagueData, Player } from './data/leagueTypes'
 import {
   formatHandicapIndex,
@@ -139,23 +139,45 @@ export default function FourManTab({
   const weeks = useMemo(() => weekNumbersInOrder(data), [data])
   const config = data.fourMan
 
+  const [selectedHalf, setSelectedHalf] = useState<'first' | 'second'>(() => {
+    if (!config) return 'first'
+    if (selectedWeek >= config.firstHalf.startWeek && selectedWeek <= config.firstHalf.endWeek)
+      return 'first'
+    if (selectedWeek >= config.secondHalf.startWeek && selectedWeek <= config.secondHalf.endWeek)
+      return 'second'
+    return 'first'
+  })
+
+  const half = config ? (selectedHalf === 'first' ? config.firstHalf : config.secondHalf) : null
+  const halfLabel = selectedHalf === 'first' ? 'First Half' : 'Second Half'
+
+  /** Weeks restricted to the currently selected half's date range. */
+  const halfWeeks = useMemo(
+    () => (half ? weeks.filter((w) => w >= half.startWeek && w <= half.endWeek) : weeks),
+    [weeks, half],
+  )
+
   const sched = data.schedule.find((s) => s.leagueWeekNumber === selectedWeek && !s.rainOut)
   const scheduledNine = sched?.nine
-
-  const { half, halfLabel } = useMemo(() => {
-    if (!config) return { half: null, halfLabel: '' }
-    return resolveActiveHalf(config, selectedWeek)
-  }, [config, selectedWeek])
 
   const byId = useMemo(() => new Map(data.players.map((p) => [p.id, p])), [data.players])
 
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
-  // Reset sort when the active half changes
-  useEffect(() => {
+  function handleHalfChange(newHalf: 'first' | 'second') {
+    if (newHalf === selectedHalf) return
+    setSelectedHalf(newHalf)
     setSortKey(null)
-  }, [halfLabel])
+    setSortDir('asc')
+    const newHalfConfig = newHalf === 'first' ? config!.firstHalf : config!.secondHalf
+    if (selectedWeek < newHalfConfig.startWeek || selectedWeek > newHalfConfig.endWeek) {
+      const firstWeek = weeks.find(
+        (w) => w >= newHalfConfig.startWeek && w <= newHalfConfig.endWeek,
+      )
+      if (firstWeek != null) onSelectWeek(firstWeek)
+    }
+  }
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -328,6 +350,24 @@ export default function FourManTab({
   return (
     <div className={styles.weeklyRoot}>
       <div className={styles.weeklyToolbar}>
+        {config ? (
+          <div className={styles.courseTeeToggle} role="group" aria-label="Half selection">
+            <button
+              type="button"
+              className={`${styles.courseTeeBtn} ${selectedHalf === 'first' ? styles.courseTeeBtnActive : ''}`}
+              onClick={() => handleHalfChange('first')}
+            >
+              First Half
+            </button>
+            <button
+              type="button"
+              className={`${styles.courseTeeBtn} ${selectedHalf === 'second' ? styles.courseTeeBtnActive : ''}`}
+              onClick={() => handleHalfChange('second')}
+            >
+              Second Half
+            </button>
+          </div>
+        ) : null}
         <label className={styles.weekLabel}>
           Scores for
           <select
@@ -335,7 +375,7 @@ export default function FourManTab({
             value={selectedWeek}
             onChange={(e) => onSelectWeek(Number(e.target.value))}
           >
-            {weeks.map((w) => (
+            {halfWeeks.map((w) => (
               <option key={w} value={w}>
                 {weekSelectLabel(data, w)}
               </option>
@@ -356,8 +396,12 @@ export default function FourManTab({
         <>
           <p className={styles.weeklyMeta}>
             {halfLabel}
-            <span className={styles.weeklyMetaSep}> · </span>
-            {nineLabel}
+            {nineLabel ? (
+              <>
+                <span className={styles.weeklyMetaSep}> · </span>
+                {nineLabel}
+              </>
+            ) : null}
             {minHcp != null ? (
               <>
                 <span className={styles.weeklyMetaSep}> · </span>
