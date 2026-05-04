@@ -367,7 +367,7 @@ export default function FourManTab({
           </p>
 
           <div className={styles.weeklyTableWrap}>
-            <table className={styles.weeklyTable}>
+            <table className={`${styles.weeklyTable} ${styles.fourManTable}`}>
               <thead>
                 {/* Row 1 — hole numbers */}
                 <tr>

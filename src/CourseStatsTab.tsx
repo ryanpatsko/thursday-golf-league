@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import scorecardImg from '../assets/scorecard-lakevue.png'
 import type { LeagueData } from './data/leagueTypes'
 import { weekNumbersInOrder, weekSelectLabel } from './lib/scheduleWeek'
 import styles from './Home.module.css'
@@ -344,6 +345,15 @@ export default function CourseStatsTab({ data }: { data: LeagueData }) {
 
       <NineTable statsMap={front} holeStart={1} title="Front Nine" leagueHcp={leagueHcp} />
       <NineTable statsMap={back} holeStart={10} title="Back Nine" leagueHcp={leagueHcp} />
+
+      <div className={styles.courseScorecard}>
+        <h2 className={styles.courseStatsNineTitle}>Scorecard</h2>
+        <img
+          src={scorecardImg}
+          alt="Lakevue Golf Course scorecard"
+          className={styles.courseScorecardImg}
+        />
+      </div>
     </div>
   )
 }
