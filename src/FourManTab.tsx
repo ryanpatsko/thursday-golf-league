@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from 'react'
-import type { FourManConfig, FourManHalf, HoleDef, LeagueData, Player } from './data/leagueTypes'
+import type { HoleDef, LeagueData, Player } from './data/leagueTypes'
 import {
   formatHandicapIndex,
   getNineForWeek,
@@ -24,21 +24,6 @@ type TeamResult = {
   relToPar: number | null
 }
 
-function resolveActiveHalf(
-  config: FourManConfig,
-  week: number,
-): { half: FourManHalf; halfLabel: string } {
-  const { firstHalf, secondHalf } = config
-  if (week >= firstHalf.startWeek && week <= firstHalf.endWeek) {
-    return { half: firstHalf, halfLabel: 'First Half' }
-  }
-  if (week >= secondHalf.startWeek && week <= secondHalf.endWeek) {
-    return { half: secondHalf, halfLabel: 'Second Half' }
-  }
-  return week <= firstHalf.endWeek
-    ? { half: firstHalf, halfLabel: 'First Half' }
-    : { half: secondHalf, halfLabel: 'Second Half' }
-}
 
 function isStrokeHole(hole: HoleDef, strokes: number): boolean {
   const hcp = hole.leagueHandicap ?? hole.strokeIndex

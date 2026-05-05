@@ -1623,21 +1623,3 @@
   color: var(--text) !important;
 }
 
-/* Row accent colours */
-.courseStatsRowPar td {
-  /* default — no background tint */
-}
-
-.courseStatsRowEagle td,
-.courseStatsRowBirdie td {
-  background: rgba(0, 160, 90, 0.08);
-}
-
-.courseStatsRowBogey td {
-  background: rgba(255, 180, 0, 0.06);
-}
-
-.courseStatsRowDouble td,
-.courseStatsRowTriple td {
-  background: rgba(200, 60, 40, 0.07);
-}
