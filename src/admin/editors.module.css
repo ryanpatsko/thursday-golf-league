@@ -474,11 +474,6 @@
   margin-bottom: 1.1rem;
 }
 
-.scoresModalPrefillBtns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
 
 /** Pull — same band as golf-off, outside the bordered golf-off box */
 .scoresModalPullOpenBtn {

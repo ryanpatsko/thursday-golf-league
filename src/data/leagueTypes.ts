@@ -103,6 +103,8 @@ export interface WeeklyScoreRow {
   pulledGross?: number
   /** Snapshot of the peer's display name when the pull was recorded (for admin clarity). */
   pulledFromPlayerName?: string
+  /** ID of the peer whose card was borrowed. Preferred over name for lookups. */
+  pulledFromPlayerId?: string
 }
 
 export type WeeklyScores = Record<string, Record<string, WeeklyScoreRow>>

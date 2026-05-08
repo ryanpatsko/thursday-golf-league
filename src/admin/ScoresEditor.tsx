@@ -119,6 +119,7 @@ function commitPulledWeek(
   week: number,
   pulledNet: number,
   pulledFromPlayerName: string,
+  pulledFromPlayerId: string,
 ): LeagueData {
   const date = dateForWeekInData(data, week)
   if (!date) return data
@@ -129,6 +130,7 @@ function commitPulledWeek(
     holes: blankHoles,
     pulledNet: Math.round(pulledNet),
     pulledFromPlayerName,
+    pulledFromPlayerId,
   }
   byWeek[date] = row
   nextScores[playerId] = byWeek
@@ -153,7 +155,7 @@ function ScoreEntryModal({
     holes: (number | null)[],
     golfOffPlayedDate: string | null,
   ) => Promise<{ ok: true } | { ok: false; message: string }>
-  onSavePull: (args: { pulledNet: number; pulledFromPlayerName: string }) => Promise<
+  onSavePull: (args: { pulledNet: number; pulledFromPlayerName: string; pulledFromPlayerId: string }) => Promise<
     { ok: true } | { ok: false; message: string }
   >
   onClear: () => Promise<{ ok: true } | { ok: false; message: string }>
@@ -239,14 +241,6 @@ function ScoreEntryModal({
     (ISO_DATE_RE.test(golfOffDate.trim()) && isValidCalendarIsoDate(golfOffDate.trim()))
   const canSave = holesComplete && golfOffDateOk
 
-  function prefillAllPars() {
-    setHoles(playerNine.holes.map((h) => h.par))
-  }
-
-  function prefillAllBogeys() {
-    setHoles(playerNine.holes.map((h) => h.par + 1))
-  }
-
   return (
     <div
       className={styles.scoresModalBackdrop}
@@ -300,6 +294,7 @@ function ScoreEntryModal({
                             const r = await onSavePull({
                               pulledNet: net,
                               pulledFromPlayerName: peer.name,
+                              pulledFromPlayerId: peer.id,
                             })
                             if (r.ok) onClose()
                             else setPullSaveError(r.message)
@@ -393,14 +388,6 @@ function ScoreEntryModal({
               </div>
             </div>
             <div className={styles.scoresModalPrefillRow}>
-              <div className={styles.scoresModalPrefillBtns}>
-                <button type="button" className={styles.btn} disabled={saving} onClick={prefillAllPars}>
-                  All pars
-                </button>
-                <button type="button" className={styles.btn} disabled={saving} onClick={prefillAllBogeys}>
-                  All bogeys
-                </button>
-              </div>
               <div className={styles.scoresModalGolfOffRow}>
                 <label className={styles.scoresModalGolfOffLabel}>
                   <input
@@ -703,7 +690,7 @@ export default function ScoresEditor({
             else setSaveMsg(r.message)
             return r
           }}
-          onSavePull={async ({ pulledNet, pulledFromPlayerName }) => {
+          onSavePull={async ({ pulledNet, pulledFromPlayerName, pulledFromPlayerId }) => {
             setSaveMsg(null)
             const next = commitPulledWeek(
               data,
@@ -711,6 +698,7 @@ export default function ScoresEditor({
               selectedWeek,
               pulledNet,
               pulledFromPlayerName,
+              pulledFromPlayerId,
             )
             const r = await persistLeague(next)
             if (r.ok) setSaveMsg('Saved pulled score.')
