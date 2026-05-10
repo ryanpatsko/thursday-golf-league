@@ -194,7 +194,7 @@ function buildPlayersAndTeams(): { players: Player[]; teams: Team[] } {
       priorSeasonScores: [...row.prior],
     }
     if (id === 'bill-leja') {
-      player.handicapOverride = { value: 9, active: true }
+      player.handicapOverride = { entries: [{ startWeek: 1, value: 9 }] }
     }
     return player
   })

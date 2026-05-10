@@ -1,13 +1,34 @@
 import type { Course, CourseNine, LeagueData, Player, ScheduleRow, WeeklyScoreRow } from '../data/leagueTypes'
 
 function normalizeHandicapOverride(
-  raw: Player['handicapOverride'],
+  raw: unknown,
 ): Player['handicapOverride'] | undefined {
   if (raw == null || typeof raw !== 'object') return undefined
-  const active = raw.active === true
-  const v = typeof raw.value === 'number' ? raw.value : Number(raw.value)
+  const r = raw as Record<string, unknown>
+
+  // Current format: { entries: [{startWeek, value}] }
+  // Also handles the intermediate format that included `active` — just ignore it.
+  if (Array.isArray(r.entries)) {
+    const entries: { startWeek: number; value: number }[] = []
+    for (const e of r.entries) {
+      if (!e || typeof e !== 'object') continue
+      const eo = e as Record<string, unknown>
+      const sw = typeof eo.startWeek === 'number' ? eo.startWeek : Number(eo.startWeek)
+      const v = typeof eo.value === 'number' ? eo.value : Number(eo.value)
+      if (!Number.isFinite(sw) || !Number.isFinite(v)) continue
+      entries.push({ startWeek: Math.round(sw), value: v })
+    }
+    if (entries.length === 0) return undefined
+    entries.sort((a, b) => a.startWeek - b.startWeek)
+    return { entries }
+  }
+
+  // Legacy format: { value, active } — only migrate when the override was actually active.
+  // If active was false, the admin had it disabled; discard it so the formula is used.
+  const v = typeof r.value === 'number' ? r.value : Number(r.value)
   if (!Number.isFinite(v)) return undefined
-  return { value: v, active }
+  if (r.active !== true) return undefined
+  return { entries: [{ startWeek: 1, value: v }] }
 }
 import {
   defaultLeagueSeniorIds,
@@ -125,7 +146,7 @@ export function migrateLeagueData(raw: LeagueData): LeagueData {
   const players: Player[] = raw.players.map((p) => {
     const isSenior =
       typeof p.isSenior === 'boolean' ? p.isSenior : defaultLeagueSeniorIds.has(p.id)
-    const handicapOverride = normalizeHandicapOverride(p.handicapOverride)
+    const handicapOverride = normalizeHandicapOverride(p.handicapOverride as unknown)
     return { ...p, isSenior, handicapOverride }
   })
 

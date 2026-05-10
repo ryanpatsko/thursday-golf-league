@@ -148,24 +148,42 @@ export function computeHandicapIndex(args: {
 }
 
 /**
- * Parsed admin override value when `active` is strictly on and `value` is a finite number
- * (coerces string/number from JSON).
+ * Parsed admin override value for a specific league week when override entries are present.
+ *
+ * For week N, the entry with the largest `startWeek ≤ N` is used.
+ * If no entry qualifies (all entries start after N), the earliest entry is used as a fallback
+ * so the override always applies when any entries exist.
  */
 export function effectiveHandicapOverrideValue(
   player: Pick<Player, 'handicapOverride'>,
+  atWeek: number,
 ): number | null {
-  const h = player.handicapOverride
-  if (h == null || h.active !== true) return null
-  const v = typeof h.value === 'number' ? h.value : Number(h.value)
+  const entries = player.handicapOverride?.entries
+  if (!entries?.length) return null
+
+  // Find the entry with the largest startWeek that is still ≤ atWeek
+  let best: (typeof entries)[number] | null = null
+  for (const entry of entries) {
+    if (entry.startWeek <= atWeek) {
+      if (best == null || entry.startWeek > best.startWeek) best = entry
+    }
+  }
+  // Fall back to the earliest entry when atWeek precedes all entries
+  if (best == null) {
+    best = entries.reduce((a, b) => (a.startWeek < b.startWeek ? a : b))
+  }
+
+  const v = typeof best.value === 'number' ? best.value : Number(best.value)
   if (!Number.isFinite(v)) return null
   return v
 }
 
-/** True when an admin handicap override is on for this player. */
+/** True when admin override entries exist for this player at the given league week. */
 export function isHandicapOverrideActive(
   player: Pick<Player, 'handicapOverride'>,
+  atWeek: number,
 ): boolean {
-  return effectiveHandicapOverrideValue(player) != null
+  return effectiveHandicapOverrideValue(player, atWeek) != null
 }
 
 /**
@@ -177,7 +195,7 @@ export function playerHandicapIndexAtWeek(
   currentSeasonTotals: number[],
   asOfLeagueWeek: number,
 ): number | null {
-  const o = effectiveHandicapOverrideValue(player)
+  const o = effectiveHandicapOverrideValue(player, asOfLeagueWeek)
   if (o != null) {
     return Math.round(o)
   }
@@ -196,7 +214,7 @@ export function playerHandicapIndexUnroundedAtWeek(
   currentSeasonTotals: number[],
   asOfLeagueWeek: number,
 ): number | null {
-  const o = effectiveHandicapOverrideValue(player)
+  const o = effectiveHandicapOverrideValue(player, asOfLeagueWeek)
   if (o != null) {
     return o
   }

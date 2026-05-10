@@ -149,9 +149,13 @@ function validatePlayer(p) {
   if (p.handicapOverride != null) {
     const ho = p.handicapOverride
     if (typeof ho !== 'object' || ho === null) return false
-    if (typeof ho.active !== 'boolean') return false
-    if (typeof ho.value !== 'number' || !Number.isFinite(ho.value)) return false
-    if (ho.active && (ho.value < -10 || ho.value > 60)) return false
+    if (!Array.isArray(ho.entries) || ho.entries.length === 0) return false
+    for (const e of ho.entries) {
+      if (!e || typeof e !== 'object') return false
+      if (typeof e.startWeek !== 'number' || !Number.isFinite(e.startWeek) || e.startWeek < 1) return false
+      if (typeof e.value !== 'number' || !Number.isFinite(e.value)) return false
+      if (e.value < -10 || e.value > 60) return false
+    }
   }
   return true
 }
@@ -426,8 +430,10 @@ export async function handler(event) {
         }
         if (p.handicapOverride != null && typeof p.handicapOverride === 'object') {
           row.handicapOverride = {
-            active: Boolean(p.handicapOverride.active),
-            value: Number(p.handicapOverride.value),
+            entries: p.handicapOverride.entries.map((e) => ({
+              startWeek: Math.round(Number(e.startWeek)),
+              value: Number(e.value),
+            })),
           }
         }
         return row

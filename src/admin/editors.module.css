@@ -129,6 +129,68 @@
   color: var(--muted);
 }
 
+/* Per-week handicap override entries in Rosters table */
+
+.overrideEntriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 13rem;
+}
+
+.overrideEntryRow {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.overrideEntryLabel {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.overrideRemoveBtn {
+  cursor: pointer;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  line-height: 1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.overrideRemoveBtn:hover {
+  border-color: rgba(220, 100, 100, 0.65);
+  color: rgba(255, 160, 160, 0.95);
+}
+
+.overrideAddBtn {
+  cursor: pointer;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--gold);
+  align-self: flex-start;
+}
+
+.overrideAddBtn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: var(--gold);
+}
+
 .scheduleMetaRow {
   display: flex;
   flex-wrap: wrap;

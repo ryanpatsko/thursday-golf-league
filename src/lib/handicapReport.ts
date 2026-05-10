@@ -78,7 +78,7 @@ export function handicapBreakdownForPlayer(
   }
   const curTotals = curEntries.map((e) => e.total)
 
-  const handicapUsesOverride = isHandicapOverrideActive(player)
+  const handicapUsesOverride = isHandicapOverrideActive(player, asOfLeagueWeek)
   const handicapIndexUnrounded = playerHandicapIndexUnroundedAtWeek(player, curTotals, asOfLeagueWeek)
   const handicapIndex = playerHandicapIndexAtWeek(player, curTotals, asOfLeagueWeek)
 

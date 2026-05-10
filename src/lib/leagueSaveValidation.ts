@@ -87,14 +87,19 @@ export function describeLeagueSaveBlocker(data: LeagueData): string | null {
   for (const p of data.players) {
     const h = p.handicapOverride
     if (h == null) continue
-    if (typeof h.active !== 'boolean') {
-      return `"${p.name}": handicap override must include active true or false.`
+    if (!Array.isArray(h.entries) || h.entries.length === 0) {
+      return `"${p.name}": handicap override must have at least one weekly entry.`
     }
-    if (typeof h.value !== 'number' || !Number.isFinite(h.value)) {
-      return `"${p.name}": handicap override value must be a finite number.`
-    }
-    if (h.active && (h.value < -10 || h.value > 60)) {
-      return `"${p.name}": when override is on, index must be between -10 and 60.`
+    for (const e of h.entries) {
+      if (typeof e.startWeek !== 'number' || !Number.isFinite(e.startWeek) || e.startWeek < 1) {
+        return `"${p.name}": each override entry must have a start week ≥ 1.`
+      }
+      if (typeof e.value !== 'number' || !Number.isFinite(e.value)) {
+        return `"${p.name}": each override entry value must be a finite number.`
+      }
+      if (e.value < -10 || e.value > 60) {
+        return `"${p.name}": override index must be between -10 and 60.`
+      }
     }
   }
   if (data.fourMan != null) {

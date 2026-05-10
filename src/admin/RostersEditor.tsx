@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { FlightId, LeagueData, Player, Team } from '../data/leagueTypes'
+import type { FlightId, HandicapOverrideEntry, LeagueData, Player, Team } from '../data/leagueTypes'
 import { describeLeagueSaveBlocker } from '../lib/leagueSaveValidation'
 import styles from './editors.module.css'
 
@@ -60,6 +60,61 @@ export default function RostersEditor({
   // Keeps commas visible while the user is mid-entry; committed on blur.
   const [priorDraft, setPriorDraft] = useState<Map<string, string>>(new Map())
 
+  // Draft state for each player's override entry value inputs (keyed by `${playerId}:${entryIndex}`)
+  const [overrideDraft, setOverrideDraft] = useState<Map<string, string>>(new Map())
+
+  function getOverrideValueDisplay(playerId: string, entryIdx: number, value: number): string {
+    const key = `${playerId}:${entryIdx}`
+    return overrideDraft.has(key) ? (overrideDraft.get(key) ?? '') : String(value)
+  }
+
+  function setOverrideValueDraft(playerId: string, entryIdx: number, raw: string) {
+    const key = `${playerId}:${entryIdx}`
+    setOverrideDraft((prev) => new Map(prev).set(key, raw))
+  }
+
+  function commitOverrideValueDraft(p: Player, entryIdx: number, raw: string) {
+    const key = `${p.id}:${entryIdx}`
+    setOverrideDraft((prev) => {
+      const m = new Map(prev)
+      m.delete(key)
+      return m
+    })
+    const num = parseFloat(raw)
+    if (!Number.isFinite(num)) return
+    const entries = [...(p.handicapOverride?.entries ?? [])]
+    if (entryIdx >= entries.length) return
+    entries[entryIdx] = { ...entries[entryIdx]!, value: num }
+    setPlayers(data.players.map((x) => (x.id !== p.id ? x : { ...x, handicapOverride: { entries } })))
+  }
+
+  function setOverrideEntryWeek(p: Player, entryIdx: number, week: number) {
+    if (!Number.isFinite(week) || week < 1) return
+    const entries = [...(p.handicapOverride?.entries ?? [])]
+    if (entryIdx >= entries.length) return
+    entries[entryIdx] = { ...entries[entryIdx]!, startWeek: Math.round(week) }
+    setPlayers(data.players.map((x) => (x.id !== p.id ? x : { ...x, handicapOverride: { entries } })))
+  }
+
+  function removeOverrideEntry(p: Player, entryIdx: number) {
+    const entries = (p.handicapOverride?.entries ?? []).filter((_, i) => i !== entryIdx)
+    setPlayers(
+      data.players.map((x) => {
+        if (x.id !== p.id) return x
+        if (entries.length === 0) return { ...x, handicapOverride: undefined }
+        return { ...x, handicapOverride: { entries } }
+      }),
+    )
+  }
+
+  function addOverrideEntry(p: Player) {
+    const existing = p.handicapOverride?.entries ?? []
+    const maxWeek = existing.reduce((m, e) => Math.max(m, e.startWeek), 0)
+    const newEntry: HandicapOverrideEntry = { startWeek: maxWeek + 1, value: 0 }
+    const entries = [...existing, newEntry]
+    setPlayers(data.players.map((x) => (x.id !== p.id ? x : { ...x, handicapOverride: { entries } })))
+  }
+
   function getPriorDisplay(p: Player): string {
     return priorDraft.has(p.id) ? (priorDraft.get(p.id) ?? '') : p.priorSeasonScores.join(', ')
   }
@@ -96,8 +151,8 @@ export default function RostersEditor({
               <th>Name</th>
               <th>Flight</th>
               <th>Senior</th>
-              <th title="9-hole handicap index used for net when “Use ovr.” is checked.">HCP ovr.</th>
-              <th title="Use the override index instead of the rolling calculation.">Use ovr.</th>
+              <th title="Per-week override entries. Each entry sets the 9-hole index from that week onward.">HCP overrides (wk → idx)</th>
+
               <th>Prior 7 (gross)</th>
             </tr>
           </thead>
@@ -153,59 +208,50 @@ export default function RostersEditor({
                   />
                 </td>
                 <td>
-                  <input
-                    type="number"
-                    step="any"
-                    className={styles.inputNarrow}
-                    placeholder="—"
-                    aria-label={`${p.name} handicap override (9-hole index)`}
-                    value={p.handicapOverride?.value ?? ''}
-                    onChange={(e) => {
-                      const t = e.target.value.trim()
-                      setPlayers(
-                        data.players.map((x) => {
-                          if (x.id !== p.id) return x
-                          if (t === '') {
-                            return { ...x, handicapOverride: undefined }
-                          }
-                          const num = Number(t)
-                          if (!Number.isFinite(num)) return x
-                          return {
-                            ...x,
-                            handicapOverride: {
-                              value: num,
-                              active: x.handicapOverride?.active ?? false,
-                            },
-                          }
-                        }),
-                      )
-                    }}
-                  />
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    aria-label={`${p.name} use handicap override for net scoring`}
-                    checked={p.handicapOverride?.active ?? false}
-                    onChange={(e) => {
-                      const active = e.target.checked
-                      setPlayers(
-                        data.players.map((x) => {
-                          if (x.id !== p.id) return x
-                          const v = x.handicapOverride?.value
-                          if (!active) {
-                            if (v == null && !x.handicapOverride) return x
-                            if (v == null) return { ...x, handicapOverride: undefined }
-                            return { ...x, handicapOverride: { value: v, active: false } }
-                          }
-                          if (v == null || !Number.isFinite(v)) {
-                            return x
-                          }
-                          return { ...x, handicapOverride: { value: v, active: true } }
-                        }),
-                      )
-                    }}
-                  />
+                  <div className={styles.overrideEntriesList}>
+                    {(p.handicapOverride?.entries ?? []).map((entry, idx) => (
+                      <div key={idx} className={styles.overrideEntryRow}>
+                        <span className={styles.overrideEntryLabel}>Wk</span>
+                        <input
+                          type="number"
+                          min={1}
+                          step={1}
+                          className={styles.inputNarrow}
+                          aria-label={`${p.name} override entry ${idx + 1} start week`}
+                          value={entry.startWeek}
+                          onChange={(e) => {
+                            const w = parseInt(e.target.value, 10)
+                            if (Number.isFinite(w) && w >= 1) setOverrideEntryWeek(p, idx, w)
+                          }}
+                        />
+                        <span className={styles.overrideEntryLabel}>→</span>
+                        <input
+                          type="number"
+                          step="any"
+                          className={styles.inputNarrow}
+                          aria-label={`${p.name} override entry ${idx + 1} index value`}
+                          value={getOverrideValueDisplay(p.id, idx, entry.value)}
+                          onChange={(e) => setOverrideValueDraft(p.id, idx, e.target.value)}
+                          onBlur={(e) => commitOverrideValueDraft(p, idx, e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className={styles.overrideRemoveBtn}
+                          aria-label={`Remove entry ${idx + 1} for ${p.name}`}
+                          onClick={() => removeOverrideEntry(p, idx)}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className={styles.overrideAddBtn}
+                      onClick={() => addOverrideEntry(p)}
+                    >
+                      + Add
+                    </button>
+                  </div>
                 </td>
                 <td>
                   <input
