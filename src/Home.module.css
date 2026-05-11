@@ -603,6 +603,47 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.playerModalTabToggle {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.playerModalTabBtn {
+  padding: 0.3rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.playerModalTabBtn + .playerModalTabBtn {
+  border-left: 1px solid var(--line);
+}
+
+.playerModalTabBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--cream);
+}
+
+.playerModalTabBtnActive {
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--cream);
+}
+
+.playerStatsTabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
 .weeklyHistoryFooter {
   margin: 0.75rem 0 0;
   font-size: 0.78rem;
