@@ -49,6 +49,8 @@ function buildWeekMap(oldSchedule: ScheduleRow[], newSchedule: ScheduleRow[]): M
 }
 
 /** Rename weeklyScores keys according to weekMap (old week number → new week number). */
+const ISO_DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/
+
 function migrateWeeklyScores(
   weeklyScores: LeagueData['weeklyScores'],
   weekMap: Map<number, number>,
@@ -58,6 +60,12 @@ function migrateWeeklyScores(
   for (const [playerId, byWeek] of Object.entries(weeklyScores)) {
     const newByWeek: Record<string, (typeof byWeek)[string]> = {}
     for (const [weekKey, scores] of Object.entries(byWeek)) {
+      // Date-keyed scores (new format) are anchored to a calendar date and
+      // don't need renumbering — only legacy numeric week keys need remapping.
+      if (ISO_DATE_KEY_RE.test(weekKey)) {
+        newByWeek[weekKey] = scores
+        continue
+      }
       const oldWeek = Number(weekKey)
       const newWeek = weekMap.get(oldWeek) ?? oldWeek
       newByWeek[String(newWeek)] = scores
