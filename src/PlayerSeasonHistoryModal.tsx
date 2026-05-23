@@ -284,16 +284,20 @@ function PlayerNineTable({
 
 type ModalTab = 'scores' | 'stats'
 
+export type PlayerModalTab = ModalTab
+
 export default function PlayerSeasonHistoryModal({
   data,
   player,
   onClose,
+  initialTab = 'scores',
 }: {
   data: LeagueData
   player: Player
   onClose: () => void
+  initialTab?: PlayerModalTab
 }) {
-  const [activeTab, setActiveTab] = useState<ModalTab>('scores')
+  const [activeTab, setActiveTab] = useState<ModalTab>(initialTab)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

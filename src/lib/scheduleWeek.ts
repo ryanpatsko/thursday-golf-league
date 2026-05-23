@@ -47,6 +47,14 @@ export function weekNumbersInOrder(data: LeagueData): number[] {
   )
 }
 
+/** Parse `?week=` against scheduled league weeks; returns null if missing or invalid. */
+export function resolveLeagueWeekFromParam(data: LeagueData, weekParam: string | null): number | null {
+  if (!weekParam) return null
+  const n = Number(weekParam)
+  if (!Number.isFinite(n) || n !== Math.trunc(n) || n < 1) return null
+  return weekNumbersInOrder(data).includes(n) ? n : null
+}
+
 /** Label for week dropdowns, e.g. `Week 1 · 4/16/2026`. */
 export function weekSelectLabel(data: LeagueData, week: number): string {
   const row = data.schedule.find((r) => r.leagueWeekNumber === week)

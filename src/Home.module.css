@@ -525,6 +525,108 @@
   margin-bottom: 0.25rem;
 }
 
+.standingsToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.weeklyReport {
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.weeklyReportHeader {
+  margin-bottom: 0.85rem;
+}
+
+.weeklyReportTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.weeklyReportMeta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.weeklyReportList {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.weeklyReportSubList {
+  margin: 0.45rem 0 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  list-style-type: circle;
+  font-size: 0.92em;
+  color: var(--muted);
+}
+
+.weeklyReportSubLabel {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.weeklyReportHcpDropped {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.weeklyReportHcpCounts {
+  font-weight: 600;
+  color: var(--cream);
+}
+
+.weeklyReportHcpLegend {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.88em;
+  color: var(--muted);
+}
+
+.weeklyReportInlineLink {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--gold);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.weeklyReportInlineLink:hover {
+  color: var(--cream);
+}
+
+.weeklyReportInlineLink:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .weekLabel {
   display: flex;
   flex-wrap: wrap;

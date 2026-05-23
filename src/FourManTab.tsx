@@ -1,20 +1,21 @@
 import { Fragment, useMemo, useState } from 'react'
-import type { HoleDef, LeagueData, Player } from './data/leagueTypes'
+import type { LeagueData } from './data/leagueTypes'
 import {
-  formatHandicapIndex,
-  getNineForWeek,
-  isPullRow,
-  playerHandicapIndexAtWeek,
-} from './lib/handicap'
-import { handicapTotalsBeforeWeek } from './lib/leagueScoring'
+  computePlayerStatsForWeek,
+  computeTeamWeekRelToPar,
+  FLIGHT_ORDER,
+  formatFourManOverall,
+  formatRelToPar,
+  isStrokeHole,
+  resolveEffectivePlayerForFourMan,
+} from './lib/fourManScoring'
+import { formatHandicapIndex, getNineForWeek } from './lib/handicap'
 import { displayHoleNumberOnNine, weekNumbersInOrder, weekSelectLabel } from './lib/scheduleWeek'
 import { PlayerNameWithSenior } from './PlayerNameWithSenior.tsx'
 import styles from './Home.module.css'
 
 /** Name + Fl + HCP + 9 holes + This Week + Overall */
 const TOTAL_COLS = 14
-
-const FLIGHT_ORDER: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 }
 
 type SortKey = 'thisWeek' | 'overall'
 
@@ -25,123 +26,6 @@ type TeamResult = {
   relToPar: number | null
 }
 
-
-function isStrokeHole(hole: HoleDef, strokes: number): boolean {
-  const hcp = hole.leagueHandicap ?? hole.strokeIndex
-  return strokes > 0 && hcp <= strokes
-}
-
-function formatRelToPar(rel: number): string {
-  if (rel === 0) return '(E)'
-  if (rel > 0) return `(+${rel})`
-  return `(${rel})`
-}
-
-function formatOverall(rel: number): string {
-  if (rel === 0) return 'E'
-  if (rel > 0) return `+${rel}`
-  return `${rel}`
-}
-
-/**
- * Computes { hcp, strokes } for every league player for a given week.
- * strokes = max(0, playerHcp − leagueMinHcp).
- */
-function computePlayerStatsForWeek(
-  data: LeagueData,
-  week: number,
-): Map<string, { hcp: number | null; strokes: number }> {
-  const hcpByPlayer = new Map<string, number | null>()
-  for (const p of data.players) {
-    const totals = handicapTotalsBeforeWeek(data, p, week)
-    hcpByPlayer.set(p.id, playerHandicapIndexAtWeek(p, totals, week))
-  }
-  let minHcp: number | null = null
-  for (const hcp of hcpByPlayer.values()) {
-    if (hcp != null && (minHcp === null || hcp < minHcp)) minHcp = hcp
-  }
-  const statsMap = new Map<string, { hcp: number | null; strokes: number }>()
-  for (const p of data.players) {
-    const hcp = hcpByPlayer.get(p.id) ?? null
-    const strokes = hcp != null && minHcp != null ? Math.max(0, hcp - minHcp) : 0
-    statsMap.set(p.id, { hcp, strokes })
-  }
-  return statsMap
-}
-
-/**
- * For Four Man scoring, resolves the effective player for an absent (pulled) team member.
- * Returns the peer player whose card was borrowed, so both their hole scores AND handicap
- * are used for best-ball computation. Prefers ID-based lookup; falls back to name for
- * legacy records that pre-date the pulledFromPlayerId field.
- */
-function resolveEffectivePlayerForFourMan(
-  data: LeagueData,
-  player: Player,
-  schedDate: string,
-  byId: Map<string, Player>,
-  byName: Map<string, Player>,
-): Player {
-  const row = data.weeklyScores[player.id]?.[schedDate]
-  if (!row || !isPullRow(row)) return player
-  if (row.pulledFromPlayerId) {
-    const peer = byId.get(row.pulledFromPlayerId)
-    if (peer) return peer
-  }
-  if (row.pulledFromPlayerName) {
-    const peer = byName.get(row.pulledFromPlayerName)
-    if (peer) return peer
-  }
-  return player
-}
-
-/**
- * For a set of players with known stats, compute the best-score result for one week.
- * Returns { relToPar } or null if no scores found.
- */
-function computeTeamWeekRelToPar(
-  data: LeagueData,
-  players: Player[],
-  schedDate: string,
-  scheduledNine: 'front' | 'back',
-  statsForWeek: Map<string, { hcp: number | null; strokes: number }>,
-  byId: Map<string, Player>,
-  byName: Map<string, Player>,
-): number | null {
-  const whiteHoles = data.course.nonSenior[scheduledNine].holes
-  let weekTotal = 0
-  let weekPar = 0
-  let weekHasScore = false
-
-  for (let i = 0; i < whiteHoles.length; i++) {
-    const whitePar = whiteHoles[i]?.par ?? 0
-    const candidates: Array<{ pid: string; flight: string; score: number }> = []
-
-    for (const p of players) {
-      // For pulls: use the peer's hole scores, handicap, and tee — not the absent player's
-      const ep = resolveEffectivePlayerForFourMan(data, p, schedDate, byId, byName)
-      const stroke = data.weeklyScores[ep.id]?.[schedDate]?.holes[i] ?? null
-      if (stroke == null) continue
-      const stats = statsForWeek.get(ep.id) ?? { hcp: null, strokes: 0 }
-      const nine = getNineForWeek(data.course, scheduledNine, ep)
-      const h = nine.holes[i]
-      if (!h) continue
-      const adjusted = isStrokeHole(h, stats.strokes) ? stroke - 1 : stroke
-      candidates.push({ pid: p.id, flight: p.flight, score: adjusted })
-    }
-
-    if (candidates.length === 0) continue
-    candidates.sort((a, b) => {
-      if (a.score !== b.score) return a.score - b.score
-      return (FLIGHT_ORDER[a.flight] ?? 9) - (FLIGHT_ORDER[b.flight] ?? 9)
-    })
-    weekTotal += candidates[0]!.score
-    weekPar += whitePar
-    weekHasScore = true
-  }
-
-  return weekHasScore ? weekTotal - weekPar : null
-}
 
 export default function FourManTab({
   data,
@@ -604,7 +488,7 @@ export default function FourManTab({
                                 >
                                   {overallRel != null ? (
                                     <span className={styles.fourManTotalScore}>
-                                      {formatOverall(overallRel)}
+                                      {formatFourManOverall(overallRel)}
                                     </span>
                                   ) : (
                                     <span className={styles.fourManTotalScore}>—</span>

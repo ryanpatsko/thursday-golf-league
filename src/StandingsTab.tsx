@@ -23,7 +23,7 @@ import {
 } from './lib/leagueScoring'
 import { formatIsoDateForDisplay } from './lib/formatIsoDateDisplay'
 import { weekNumbersInOrder, weekSelectLabel } from './lib/scheduleWeek'
-import PlayerSeasonHistoryModal from './PlayerSeasonHistoryModal.tsx'
+import PlayerSeasonHistoryModal, { type PlayerModalTab } from './PlayerSeasonHistoryModal.tsx'
 import { PlayerNameWithSenior } from './PlayerNameWithSenior.tsx'
 import styles from './Home.module.css'
 
@@ -234,8 +234,15 @@ export default function StandingsTab({
   selectedWeek: number
   onSelectWeek: (week: number) => void
 }) {
-  const [historyPlayer, setHistoryPlayer] = useState<Player | null>(null)
+  const [historyModal, setHistoryModal] = useState<{
+    player: Player
+    tab: PlayerModalTab
+  } | null>(null)
   const weeks = useMemo(() => weekNumbersInOrder(data), [data])
+
+  function openPlayerModal(player: Player, tab: PlayerModalTab = 'scores') {
+    setHistoryModal({ player, tab })
+  }
 
   const [teamSortKey, setTeamSortKey] = useState<'week' | 'total' | null>(null)
   const [teamSortDir, setTeamSortDir] = useState<'asc' | 'desc'>('asc')
@@ -343,7 +350,7 @@ export default function StandingsTab({
 
   return (
     <div className={styles.standingsRoot}>
-      <div className={styles.weekRow}>
+      <div className={styles.standingsToolbar}>
         <label className={styles.weekLabel}>
           Standings for
           <select
@@ -474,7 +481,7 @@ export default function StandingsTab({
                                 type="button"
                                 className={styles.standingsPlayerNameBtn}
                                 aria-label={`${p.name} season history`}
-                                onClick={() => setHistoryPlayer(p)}
+                                onClick={() => openPlayerModal(p)}
                               >
                                 <PlayerNameWithSenior name={p.name} isSenior={p.isSenior} />
                               </button>
@@ -513,15 +520,16 @@ export default function StandingsTab({
 
       <div className={styles.standingsTeamCardsGrid}>
         {teamsInLeagueOrder.map((t) => (
-          <TeamWeekCard key={t.id} data={data} team={t} week={selectedWeek} onPlayerClick={setHistoryPlayer} />
+          <TeamWeekCard key={t.id} data={data} team={t} week={selectedWeek} onPlayerClick={openPlayerModal} />
         ))}
       </div>
-      {historyPlayer ? (
+      {historyModal ? (
         <PlayerSeasonHistoryModal
-          key={historyPlayer.id}
+          key={`${historyModal.player.id}-${historyModal.tab}`}
           data={data}
-          player={historyPlayer}
-          onClose={() => setHistoryPlayer(null)}
+          player={historyModal.player}
+          initialTab={historyModal.tab}
+          onClose={() => setHistoryModal(null)}
         />
       ) : null}
     </div>

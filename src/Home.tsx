@@ -1,34 +1,69 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { FaGolfBallTee } from 'react-icons/fa6'
 import type { LeagueData } from './data/leagueTypes'
 import { loadLeagueDataForPublic } from './lib/leagueApi'
-import { defaultLeagueWeekNumber } from './lib/scheduleWeek'
+import { defaultLeagueWeekNumber, resolveLeagueWeekFromParam } from './lib/scheduleWeek'
 import CourseStatsTab from './CourseStatsTab.tsx'
 import GolfOffsTab from './GolfOffsTab.tsx'
 import HandicapsTab from './HandicapsTab.tsx'
+import RecapsTab from './RecapsTab.tsx'
 import StandingsTab from './StandingsTab.tsx'
 import WeeklyScoresTab from './WeeklyScoresTab.tsx'
 import FourManTab from './FourManTab.tsx'
 import styles from './Home.module.css'
 
-const HOME_TABS = ['standings', 'weekly', 'four', 'handicaps', 'golfOffs', 'courseStats'] as const
+const HOME_TABS = ['standings', 'weekly', 'four', 'handicaps', 'recaps', 'golfOffs', 'courseStats'] as const
 type HomeTabId = (typeof HOME_TABS)[number]
 
 const TAB_LABELS: Record<HomeTabId, string> = {
   standings: 'Standings',
   weekly: 'Weekly scores',
   handicaps: 'Handicaps',
+  recaps: 'Recaps',
   golfOffs: 'Golf-offs',
   courseStats: 'Course Stats',
   four: 'Four Man',
 }
 
+function resolveViewPlayerId(data: LeagueData, view: string | null): string | null {
+  if (!view) return null
+  return data.players.some((p) => p.id === view) ? view : null
+}
+
 export default function Home() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [data, setData] = useState<LeagueData | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<HomeTabId>('standings')
   const [selectedWeek, setSelectedWeek] = useState<number>(1)
+
+  const viewPlayerId = data ? resolveViewPlayerId(data, searchParams.get('view')) : null
+
+  function setViewPlayerId(playerId: string | null) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (playerId) next.set('view', playerId)
+        else next.delete('view')
+        return next
+      },
+      { replace: true },
+    )
+    if (playerId) setActiveTab('recaps')
+  }
+
+  function setSelectedWeekAndUrl(week: number) {
+    setSelectedWeek(week)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.set('week', String(week))
+        return next
+      },
+      { replace: true },
+    )
+  }
 
   const refreshData = useCallback(() => {
     loadLeagueDataForPublic()
@@ -48,7 +83,8 @@ export default function Home() {
       .then((d) => {
         if (cancelled) return
         setData(d)
-        setSelectedWeek(defaultLeagueWeekNumber(d))
+        const weekFromUrl = resolveLeagueWeekFromParam(d, searchParams.get('week'))
+        setSelectedWeek(weekFromUrl ?? defaultLeagueWeekNumber(d))
         setLoadError(null)
       })
       .catch(() => {
@@ -59,6 +95,18 @@ export default function Home() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (!data) return
+    const weekFromUrl = resolveLeagueWeekFromParam(data, searchParams.get('week'))
+    if (weekFromUrl != null) {
+      setSelectedWeek(weekFromUrl)
+    }
+    const view = searchParams.get('view')
+    if (view && resolveViewPlayerId(data, view)) {
+      setActiveTab('recaps')
+    }
+  }, [data, searchParams])
 
   useEffect(() => {
     const onVis = () => {
@@ -110,17 +158,32 @@ export default function Home() {
 
             {activeTab === 'standings' ? (
               <div role="tabpanel" className={styles.tabPanel}>
-                <StandingsTab data={data} selectedWeek={selectedWeek} onSelectWeek={setSelectedWeek} />
+                <StandingsTab
+                  data={data}
+                  selectedWeek={selectedWeek}
+                  onSelectWeek={setSelectedWeekAndUrl}
+                />
               </div>
             ) : null}
             {activeTab === 'weekly' ? (
               <div role="tabpanel" className={styles.tabPanel}>
-                <WeeklyScoresTab data={data} selectedWeek={selectedWeek} onSelectWeek={setSelectedWeek} />
+                <WeeklyScoresTab data={data} selectedWeek={selectedWeek} onSelectWeek={setSelectedWeekAndUrl} />
               </div>
             ) : null}
             {activeTab === 'handicaps' ? (
               <div role="tabpanel" className={styles.tabPanel}>
-                <HandicapsTab data={data} asOfWeek={selectedWeek} onAsOfWeekChange={setSelectedWeek} />
+                <HandicapsTab data={data} asOfWeek={selectedWeek} onAsOfWeekChange={setSelectedWeekAndUrl} />
+              </div>
+            ) : null}
+            {activeTab === 'recaps' ? (
+              <div role="tabpanel" className={styles.tabPanel}>
+                <RecapsTab
+                  data={data}
+                  selectedWeek={selectedWeek}
+                  onSelectWeek={setSelectedWeekAndUrl}
+                  viewPlayerId={viewPlayerId}
+                  onViewPlayerIdChange={setViewPlayerId}
+                />
               </div>
             ) : null}
             {activeTab === 'golfOffs' ? (
@@ -135,7 +198,7 @@ export default function Home() {
             ) : null}
             {activeTab === 'four' ? (
               <div role="tabpanel" className={styles.tabPanel}>
-                <FourManTab data={data} selectedWeek={selectedWeek} onSelectWeek={setSelectedWeek} />
+                <FourManTab data={data} selectedWeek={selectedWeek} onSelectWeek={setSelectedWeekAndUrl} />
               </div>
             ) : null}
           </div>

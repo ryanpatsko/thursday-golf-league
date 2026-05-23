@@ -220,7 +220,8 @@ function validateWeeklyScores(scores) {
           rk !== 'golfOffPlayedDate' &&
           rk !== 'pulledGross' &&
           rk !== 'pulledNet' &&
-          rk !== 'pulledFromPlayerName'
+          rk !== 'pulledFromPlayerName' &&
+          rk !== 'pulledFromPlayerId'
         )
           return false
       }
@@ -246,6 +247,11 @@ function validateWeeklyScores(scores) {
           if (typeof row.pulledFromPlayerName !== 'string') return false
           if (row.pulledFromPlayerName.length < 1 || row.pulledFromPlayerName.length > 80) return false
         }
+        if (row.pulledFromPlayerId != null) {
+          if (typeof row.pulledFromPlayerId !== 'string') return false
+          if (row.pulledFromPlayerId.length < 1 || row.pulledFromPlayerId.length > 80) return false
+          if (!ID_RE.test(row.pulledFromPlayerId)) return false
+        }
       }
       if (row.pulledGross != null) {
         if (typeof row.pulledGross !== 'number' || !Number.isFinite(row.pulledGross)) return false
@@ -257,6 +263,11 @@ function validateWeeklyScores(scores) {
         if (row.pulledFromPlayerName != null) {
           if (typeof row.pulledFromPlayerName !== 'string') return false
           if (row.pulledFromPlayerName.length < 1 || row.pulledFromPlayerName.length > 80) return false
+        }
+        if (row.pulledFromPlayerId != null) {
+          if (typeof row.pulledFromPlayerId !== 'string') return false
+          if (row.pulledFromPlayerId.length < 1 || row.pulledFromPlayerId.length > 80) return false
+          if (!ID_RE.test(row.pulledFromPlayerId)) return false
         }
       }
     }
