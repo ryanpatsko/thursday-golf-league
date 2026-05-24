@@ -37,21 +37,7 @@ export default function Home() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<HomeTabId>('standings')
   const [selectedWeek, setSelectedWeek] = useState<number>(1)
-
-  const viewPlayerId = data ? resolveViewPlayerId(data, searchParams.get('view')) : null
-
-  function setViewPlayerId(playerId: string | null) {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev)
-        if (playerId) next.set('view', playerId)
-        else next.delete('view')
-        return next
-      },
-      { replace: true },
-    )
-    if (playerId) setActiveTab('recaps')
-  }
+  const [recapPlayerId, setRecapPlayerId] = useState<string | null>(null)
 
   function setSelectedWeekAndUrl(week: number) {
     setSelectedWeek(week)
@@ -85,6 +71,11 @@ export default function Home() {
         setData(d)
         const weekFromUrl = resolveLeagueWeekFromParam(d, searchParams.get('week'))
         setSelectedWeek(weekFromUrl ?? defaultLeagueWeekNumber(d))
+        const viewFromUrl = resolveViewPlayerId(d, searchParams.get('view'))
+        if (viewFromUrl) {
+          setRecapPlayerId(viewFromUrl)
+          setActiveTab('recaps')
+        }
         setLoadError(null)
       })
       .catch(() => {
@@ -101,10 +92,6 @@ export default function Home() {
     const weekFromUrl = resolveLeagueWeekFromParam(data, searchParams.get('week'))
     if (weekFromUrl != null) {
       setSelectedWeek(weekFromUrl)
-    }
-    const view = searchParams.get('view')
-    if (view && resolveViewPlayerId(data, view)) {
-      setActiveTab('recaps')
     }
   }, [data, searchParams])
 
@@ -181,8 +168,8 @@ export default function Home() {
                   data={data}
                   selectedWeek={selectedWeek}
                   onSelectWeek={setSelectedWeekAndUrl}
-                  viewPlayerId={viewPlayerId}
-                  onViewPlayerIdChange={setViewPlayerId}
+                  viewPlayerId={recapPlayerId}
+                  onViewPlayerIdChange={setRecapPlayerId}
                 />
               </div>
             ) : null}

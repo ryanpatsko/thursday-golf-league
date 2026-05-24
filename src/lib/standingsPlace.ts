@@ -19,6 +19,16 @@ export function placePhrase(place: number, tied: boolean): string {
   return tied ? `tied for ${label} place` : `${label} place`
 }
 
+/** After "is now" / "are now" — avoids "in tied for …". */
+export function nowStandingPhrase(place: number, tied: boolean): string {
+  return tied ? placePhrase(place, true) : `in ${placePhrase(place, false)}`
+}
+
+/** Four Man recap clause — avoids "sitting in tied for …". */
+export function fourManStandingPhrase(place: number, tied: boolean): string {
+  return tied ? `is ${placePhrase(place, true)}` : `sitting in ${placePhrase(place, false)}`
+}
+
 /**
  * 1-based standing place for `targetId` in a list sorted by points descending
  * (competition ranking: tied entries share the same place).

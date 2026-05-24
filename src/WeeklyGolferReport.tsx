@@ -30,7 +30,13 @@ import {
   handicapPoolDisplayForPlayer,
   type HandicapCellRole,
 } from './lib/handicapReport'
-import { placePhrase, pointsBehindLeader, standingPlace, strokesBehindLeader } from './lib/standingsPlace'
+import {
+  fourManStandingPhrase,
+  nowStandingPhrase,
+  pointsBehindLeader,
+  standingPlace,
+  strokesBehindLeader,
+} from './lib/standingsPlace'
 import { toIsoDateLocal, weekNumbersInOrder, weekSelectLabel } from './lib/scheduleWeek'
 import { buildRoundGoodBadNews } from './lib/weeklyReportRoundNotes'
 import { PlayerNameWithSenior } from './PlayerNameWithSenior.tsx'
@@ -143,7 +149,7 @@ function buildFourManLine(
   const parts: string[] = []
   if (weekTotal != null) parts.push(`posted a score of ${weekTotal}`)
   if (overallRel != null) parts.push(`is now ${formatFourManOverall(overallRel)} overall`)
-  if (place != null) parts.push(`sitting in ${placePhrase(place.place, place.tied)}`)
+  if (place != null) parts.push(fourManStandingPhrase(place.place, place.tied))
   if (parts.length === 0) return null
   const tail =
     parts.length >= 3
@@ -244,7 +250,7 @@ export default function WeeklyGolferReport({
       const ptsLabel = formatStandingPoints(weekPts)
       teamLine =
         place != null
-          ? `Your team (${team.name}) scored ${ptsLabel} points this week and is now in ${placePhrase(place.place, place.tied)}${behindLeaderSuffix(pointsBehindLeader(teamIds, halfPts, team.id))}.`
+          ? `Your team (${team.name}) scored ${ptsLabel} points this week and is now ${nowStandingPhrase(place.place, place.tied)}${behindLeaderSuffix(pointsBehindLeader(teamIds, halfPts, team.id))}.`
           : `Your team (${team.name}) scored ${ptsLabel} points this week.`
     }
 
@@ -255,7 +261,7 @@ export default function WeeklyGolferReport({
     const flightWeek = flightWeekPts.get(player.id) ?? 0
     const flightLine =
       flightPlace != null
-        ? `In Flight ${player.flight}, you scored ${formatStandingPoints(flightWeek)} points and are now in ${placePhrase(flightPlace.place, flightPlace.tied)}${behindLeaderSuffix(pointsBehindLeader(flightIds, flightHalfPts, player.id))}.`
+        ? `In Flight ${player.flight}, you scored ${formatStandingPoints(flightWeek)} points and are now ${nowStandingPhrase(flightPlace.place, flightPlace.tied)}${behindLeaderSuffix(pointsBehindLeader(flightIds, flightHalfPts, player.id))}.`
         : `In Flight ${player.flight}, you scored ${formatStandingPoints(flightWeek)} points this week.`
 
     let fourManLine: string | null = null
