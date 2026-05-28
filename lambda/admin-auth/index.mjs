@@ -306,6 +306,27 @@ function validateFourMan(fm) {
   return validateFourManHalf(fm.firstHalf) && validateFourManHalf(fm.secondHalf)
 }
 
+/** @param {unknown} greenies */
+function validateGreenies(greenies) {
+  if (greenies == null) return true
+  if (typeof greenies !== 'object') return false
+  const entries = Object.entries(greenies)
+  if (entries.length > 40) return false
+  for (const [dateKey, week] of entries) {
+    if (typeof dateKey !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false
+    if (!week || typeof week !== 'object') return false
+    if (!week.winners || typeof week.winners !== 'object') return false
+    const winners = Object.entries(week.winners)
+    if (winners.length > 9) return false
+    for (const [holeKey, playerId] of winners) {
+      const hn = Number(holeKey)
+      if (!Number.isFinite(hn) || hn < 1 || hn > 9) return false
+      if (typeof playerId !== 'string' || playerId.length > 80 || !ID_RE.test(playerId)) return false
+    }
+  }
+  return true
+}
+
 /** @param {unknown} body */
 function validateLeagueDoc(body) {
   if (!body || typeof body !== 'object') return false
@@ -325,6 +346,7 @@ function validateLeagueDoc(body) {
   if (!body.schedule.every(validateScheduleRow)) return false
   if (!validateWeeklyScores(body.weeklyScores)) return false
   if (body.fourMan != null && !validateFourMan(body.fourMan)) return false
+  if (body.greenies != null && !validateGreenies(body.greenies)) return false
 
   const playerIds = new Set(body.players.map((p) => p.id))
   if (playerIds.size !== body.players.length) return false
@@ -340,6 +362,13 @@ function validateLeagueDoc(body) {
     const counts = { A: 0, B: 0, C: 0, D: 0 }
     for (const f of fs) counts[f]++
     if (counts.A !== 1 || counts.B !== 1 || counts.C !== 1 || counts.D !== 1) return false
+  }
+  if (body.greenies != null) {
+    for (const week of Object.values(body.greenies)) {
+      for (const playerId of Object.values(week.winners)) {
+        if (!playerIds.has(playerId)) return false
+      }
+    }
   }
   return true
 }

@@ -129,6 +129,14 @@ export type AdminTeeTimesGroup = {
   members: AdminTeeTimesReadyEntry[]
 }
 
+/** Closest-to-the-pin winners for par 3s on a league night (keyed by ISO date in `greenies`). */
+export interface GreeniesWeek {
+  /** Par-3 hole number on the scheduled nine (1–9) → winning player id */
+  winners: Record<string, string>
+}
+
+export type GreeniesByDate = Record<string, GreeniesWeek>
+
 export interface LeagueData {
   version: number
   meta: LeagueMeta
@@ -144,4 +152,6 @@ export interface LeagueData {
     ready: AdminTeeTimesReadyEntry[]
     teeGroups: AdminTeeTimesGroup[]
   }
+  /** Greenies (closest on par 3s) — winners per league night, keyed by schedule ISO date. */
+  greenies?: GreeniesByDate
 }

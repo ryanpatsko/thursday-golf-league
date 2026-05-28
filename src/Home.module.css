@@ -1375,6 +1375,191 @@
   font-style: italic;
 }
 
+/* —— Greenies —— */
+.greeniesRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.greeniesSummaryHeading {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--gold);
+}
+
+.greeniesSummary {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(
+    145deg,
+    rgba(0, 0, 0, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+}
+
+.greeniesSeniorSplit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+  margin-bottom: 0.85rem;
+}
+
+.greeniesSeniorStat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.greeniesSeniorStatValue {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  line-height: 1;
+}
+
+.greeniesSeniorStatLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.greeniesSeniorNote {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.greeniesTableWrap {
+  overflow-x: auto;
+}
+
+.greeniesTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.greeniesTable th,
+.greeniesTable td {
+  padding: 0.4rem 0.55rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.greeniesTable th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.greeniesNumCol {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.greeniesWeeks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.greeniesWeek {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(
+    145deg,
+    rgba(0, 0, 0, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+}
+
+.greeniesWeekHeading {
+  margin: 0 0 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--gold);
+}
+
+.greeniesWeekMeta {
+  margin: 0 0 0.55rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.greeniesHoleList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.greeniesHoleItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  font-size: 0.88rem;
+}
+
+.greeniesHoleLabel {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.greeniesHoleYds {
+  margin-left: 0.45rem;
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.greeniesHoleWinner {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.5rem 1rem;
+  text-align: right;
+}
+
+.greeniesHolePayout {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.greeniesHolePending {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.greeniesEmpty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
 /* —— Handicaps report —— */
 .handicapsRoot {
   display: flex;

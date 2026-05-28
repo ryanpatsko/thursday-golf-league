@@ -6,6 +6,7 @@ import { loadLeagueDataForPublic } from './lib/leagueApi'
 import { defaultLeagueWeekNumber, resolveLeagueWeekFromParam } from './lib/scheduleWeek'
 import CourseStatsTab from './CourseStatsTab.tsx'
 import GolfOffsTab from './GolfOffsTab.tsx'
+import GreeniesTab from './GreeniesTab.tsx'
 import HandicapsTab from './HandicapsTab.tsx'
 import RecapsTab from './RecapsTab.tsx'
 import StandingsTab from './StandingsTab.tsx'
@@ -13,7 +14,7 @@ import WeeklyScoresTab from './WeeklyScoresTab.tsx'
 import FourManTab from './FourManTab.tsx'
 import styles from './Home.module.css'
 
-const HOME_TABS = ['standings', 'weekly', 'four', 'handicaps', 'recaps', 'golfOffs', 'courseStats'] as const
+const HOME_TABS = ['standings', 'weekly', 'four', 'handicaps', 'recaps', 'golfOffs', 'greenies', 'courseStats'] as const
 type HomeTabId = (typeof HOME_TABS)[number]
 
 const TAB_LABELS: Record<HomeTabId, string> = {
@@ -22,6 +23,7 @@ const TAB_LABELS: Record<HomeTabId, string> = {
   handicaps: 'Handicaps',
   recaps: 'Recaps',
   golfOffs: 'Golf-offs',
+  greenies: 'Greenies',
   courseStats: 'Course Stats',
   four: 'Four Man',
 }
@@ -176,6 +178,11 @@ export default function Home() {
             {activeTab === 'golfOffs' ? (
               <div role="tabpanel" className={styles.tabPanel}>
                 <GolfOffsTab data={data} />
+              </div>
+            ) : null}
+            {activeTab === 'greenies' ? (
+              <div role="tabpanel" className={styles.tabPanel}>
+                <GreeniesTab data={data} />
               </div>
             ) : null}
             {activeTab === 'courseStats' ? (

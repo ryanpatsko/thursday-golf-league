@@ -1013,3 +1013,41 @@
   font-size: 0.82em;
   font-style: italic;
 }
+
+.greeniesAdminList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 32rem;
+}
+
+.greeniesAdminRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.greeniesAdminHole {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--cream);
+}
+
+.greeniesAdminHoleMeta {
+  display: block;
+  margin-top: 0.1rem;
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.greeniesAdminSelect {
+  width: 100%;
+  max-width: 20rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.88rem;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--cream);
+}
