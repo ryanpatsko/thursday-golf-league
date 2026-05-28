@@ -5,6 +5,7 @@ import {
   eligibleGreeniesPlayerCount,
   formatGreeniesDollars,
   GREENIES_ENTRY_FEE,
+  GREENIES_GUEST_WINNER_OPTIONS,
   greeniesPotDollars,
   greeniesWinnerPayoutDollars,
   greeniesWinnersForWeek,
@@ -102,6 +103,13 @@ export default function GreeniesEditor({
                       {p.isSenior ? ' *' : ''}
                     </option>
                   ))}
+                  <optgroup label="Guests">
+                    {GREENIES_GUEST_WINNER_OPTIONS.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </label>
             )

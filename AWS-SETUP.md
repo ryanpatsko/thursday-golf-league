@@ -58,7 +58,7 @@ You can upload an initial file from the admin app after sign-in (**Save to S3**)
 
 ## 2. Lambda (`lambda/admin-auth`)
 
-- **Runtime:** Node.js 20.x (or 18+), handler **`index.handler`**, zip from **`npm run package:lambda`** → `dist/lambda-admin-auth.zip`.
+- **Runtime:** Node.js 20.x (or 18+), handler **`index.handler`**, zip from **`npm run package:lambda`** → `dist-lambda/lambda-admin-auth.zip`.
 
 ### Environment variables
 

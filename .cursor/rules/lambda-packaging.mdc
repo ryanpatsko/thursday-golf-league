@@ -13,7 +13,7 @@ From the **repository root**:
 npm run package:lambda
 ```
 
-That writes **`dist/lambda-admin-auth.zip`** for AWS Lambda upload. After it succeeds, mention that the zip is ready and its path.
+That writes **`dist-lambda/lambda-admin-auth.zip`** for AWS Lambda upload (separate from `dist/` so `npm run build` does not delete it). After it succeeds, mention that the zip is ready and its path.
 
 Do **not** only tell the user to run it — execute it yourself in the environment.
 

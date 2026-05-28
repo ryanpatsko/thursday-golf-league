@@ -13,6 +13,7 @@ const JWT_SUB = 'golf-league-admin'
 const FLIGHTS = new Set(['A', 'B', 'C', 'D'])
 const NINES = new Set(['front', 'back'])
 const ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const GREENIES_GUEST_WINNER_IDS = new Set(['greenies-guest-senior', 'greenies-guest-non-senior'])
 
 const s3 = new S3Client({})
 
@@ -366,7 +367,7 @@ function validateLeagueDoc(body) {
   if (body.greenies != null) {
     for (const week of Object.values(body.greenies)) {
       for (const playerId of Object.values(week.winners)) {
-        if (!playerIds.has(playerId)) return false
+        if (!GREENIES_GUEST_WINNER_IDS.has(playerId) && !playerIds.has(playerId)) return false
       }
     }
   }

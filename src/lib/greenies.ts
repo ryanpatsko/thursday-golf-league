@@ -12,6 +12,41 @@ import { dateForWeek, displayHoleNumberOnNine, weekSelectLabel } from './schedul
 
 export const GREENIES_ENTRY_FEE = 2
 
+/** Stored in `greenies.*.winners` when a non-roster player wins. */
+export const GREENIES_GUEST_SENIOR_ID = 'greenies-guest-senior'
+export const GREENIES_GUEST_NON_SENIOR_ID = 'greenies-guest-non-senior'
+
+export const GREENIES_GUEST_WINNER_OPTIONS = [
+  { id: GREENIES_GUEST_SENIOR_ID, label: 'Guest - Senior' },
+  { id: GREENIES_GUEST_NON_SENIOR_ID, label: 'Guest - Non Senior' },
+] as const
+
+export function isGreeniesGuestWinnerId(winnerId: string): boolean {
+  return winnerId === GREENIES_GUEST_SENIOR_ID || winnerId === GREENIES_GUEST_NON_SENIOR_ID
+}
+
+export type GreeniesWinnerDisplay = {
+  id: string
+  name: string
+  isSenior: boolean
+  isGuest: boolean
+}
+
+export function resolveGreeniesWinner(
+  winnerId: string,
+  playersById: Map<string, Player>,
+): GreeniesWinnerDisplay | null {
+  if (winnerId === GREENIES_GUEST_SENIOR_ID) {
+    return { id: winnerId, name: 'Guest - Senior', isSenior: true, isGuest: true }
+  }
+  if (winnerId === GREENIES_GUEST_NON_SENIOR_ID) {
+    return { id: winnerId, name: 'Guest - Non Senior', isSenior: false, isGuest: true }
+  }
+  const pl = playersById.get(winnerId)
+  if (!pl) return null
+  return { id: pl.id, name: pl.name, isSenior: pl.isSenior, isGuest: false }
+}
+
 /** Par-3 holes on the scheduled nine (pars match across tee sets). */
 export function par3HolesOnNine(course: Course, nine: NineSide): HoleDef[] {
   return course.nonSenior[nine].holes.filter((h) => h.par === 3)
@@ -62,7 +97,7 @@ export type GreeniesHoleResult = {
   displayHole: number
   yardage: number
   winnerId: string | null
-  winner: Player | null
+  winner: GreeniesWinnerDisplay | null
   payoutDollars: number | null
 }
 
@@ -88,7 +123,7 @@ export function greeniesWeekSummary(data: LeagueData, week: number): GreeniesWee
 
   const holes: GreeniesHoleResult[] = par3HolesOnNine(data.course, sched.nine).map((h) => {
     const winnerId = winners[String(h.holeNumber)] ?? null
-    const winner = winnerId ? (byId.get(winnerId) ?? null) : null
+    const winner = winnerId ? resolveGreeniesWinner(winnerId, byId) : null
     return {
       holeNumber: h.holeNumber,
       displayHole: displayHoleNumberOnNine(sched.nine, h.holeNumber - 1),
@@ -129,7 +164,6 @@ export function greeniesSeasonStats(data: LeagueData): {
   const earningsByPlayer = new Map<string, number>()
   let seniorWins = 0
   let nonSeniorWins = 0
-  const byId = new Map(data.players.map((p) => [p.id, p]))
 
   for (const week of [...new Set(data.schedule.filter((r) => !r.rainOut).map((r) => r.leagueWeekNumber))].sort(
     (a, b) => a - b,
@@ -137,14 +171,15 @@ export function greeniesSeasonStats(data: LeagueData): {
     const summary = greeniesWeekSummary(data, week)
     if (!summary) continue
     for (const hole of summary.holes) {
-      if (!hole.winnerId) continue
-      winsByPlayer.set(hole.winnerId, (winsByPlayer.get(hole.winnerId) ?? 0) + 1)
-      earningsByPlayer.set(
-        hole.winnerId,
-        (earningsByPlayer.get(hole.winnerId) ?? 0) + summary.payoutPerWinner,
-      )
-      const pl = byId.get(hole.winnerId)
-      if (pl?.isSenior) seniorWins++
+      if (!hole.winnerId || !hole.winner) continue
+      if (!hole.winner.isGuest) {
+        winsByPlayer.set(hole.winnerId, (winsByPlayer.get(hole.winnerId) ?? 0) + 1)
+        earningsByPlayer.set(
+          hole.winnerId,
+          (earningsByPlayer.get(hole.winnerId) ?? 0) + summary.payoutPerWinner,
+        )
+      }
+      if (hole.winner.isSenior) seniorWins++
       else nonSeniorWins++
     }
   }

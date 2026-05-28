@@ -1,5 +1,6 @@
 /**
- * Builds dist/lambda-admin-auth.zip for AWS Lambda upload.
+ * Builds dist-lambda/lambda-admin-auth.zip for AWS Lambda upload.
+ * (Not under dist/ — Vite empties dist on every frontend build.)
  */
 import { execSync } from 'node:child_process'
 import { createWriteStream, mkdirSync } from 'node:fs'
@@ -10,7 +11,7 @@ import archiver from 'archiver'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
 const lambdaDir = path.join(root, 'lambda', 'admin-auth')
-const outDir = path.join(root, 'dist')
+const outDir = path.join(root, 'dist-lambda')
 const outZip = path.join(outDir, 'lambda-admin-auth.zip')
 
 try {
