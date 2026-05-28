@@ -15,6 +15,7 @@ import ScoresEditor from './admin/ScoresEditor.tsx'
 import TeeTimesEditor from './admin/TeeTimesEditor.tsx'
 import FourManEditor from './admin/FourManEditor.tsx'
 import GreeniesEditor from './admin/GreeniesEditor.tsx'
+import ContactInfoEditor from './admin/ContactInfoEditor.tsx'
 import type { LeagueData } from './data/leagueTypes.ts'
 import { defaultLeagueWeekNumber } from './lib/scheduleWeek.ts'
 import {
@@ -30,7 +31,16 @@ import styles from './Admin.module.css'
 
 type GateState = 'checking' | 'locked' | 'unlocked'
 
-const ADMIN_TAB_IDS = ['course', 'rosters', 'fourMan', 'schedule', 'scores', 'greenies', 'teeTimes'] as const
+const ADMIN_TAB_IDS = [
+  'course',
+  'rosters',
+  'contacts',
+  'fourMan',
+  'schedule',
+  'scores',
+  'greenies',
+  'teeTimes',
+] as const
 type AdminTabId = (typeof ADMIN_TAB_IDS)[number]
 
 function isAdminTabId(value: string | null): value is AdminTabId {
@@ -40,6 +50,7 @@ function isAdminTabId(value: string | null): value is AdminTabId {
 const TAB_LABELS: Record<AdminTabId, string> = {
   course: 'Course',
   rosters: 'Rosters',
+  contacts: 'Contact Info',
   fourMan: 'Four Man',
   schedule: 'Schedule',
   scores: 'Scores',
@@ -128,6 +139,9 @@ function AdminDashboard({
             ) : null}
             {id === 'rosters' && activeTab === 'rosters' ? (
               <RostersEditor data={league} onChange={onChange} />
+            ) : null}
+            {id === 'contacts' && activeTab === 'contacts' ? (
+              <ContactInfoEditor data={league} onChange={onChange} />
             ) : null}
             {id === 'fourMan' && activeTab === 'fourMan' ? (
               <FourManEditor data={league} onChange={onChange} />
