@@ -24,6 +24,37 @@ function compareTeamsByLeagueNumber(a: Team, b: Team): number {
   return a.name.localeCompare(b.name)
 }
 
+function rollingBandEdges(asOfWeek: number): {
+  leftPriorIdx: number | null
+  rightPriorIdx: number | null
+  leftWeek: number | null
+  rightWeek: number | null
+} {
+  const leagueBandStart = Math.max(1, asOfWeek - 7)
+  const leagueBandEnd = Math.max(0, asOfWeek - 1)
+
+  const priorInBand: number[] = []
+  HANDICAPS_PRIOR_WEEK_LABELS.forEach((wk, i) => {
+    if (priorSeasonHeaderInRollingBand(asOfWeek, wk)) priorInBand.push(i)
+  })
+
+  const weeksInBand: number[] = []
+  if (leagueBandEnd >= leagueBandStart) {
+    for (let w = leagueBandStart; w <= leagueBandEnd; w++) weeksInBand.push(w)
+  }
+
+  if (priorInBand.length === 0 && weeksInBand.length === 0) {
+    return { leftPriorIdx: null, rightPriorIdx: null, leftWeek: null, rightWeek: null }
+  }
+
+  return {
+    leftPriorIdx: priorInBand.length > 0 ? priorInBand[0]! : null,
+    rightPriorIdx: weeksInBand.length > 0 ? null : priorInBand[priorInBand.length - 1]!,
+    leftWeek: priorInBand.length > 0 ? null : weeksInBand[0]!,
+    rightWeek: weeksInBand.length > 0 ? weeksInBand[weeksInBand.length - 1]! : null,
+  }
+}
+
 function roleClass(role: HandicapCellRole): string {
   switch (role) {
     case 'inPool':
@@ -58,6 +89,7 @@ export default function HandicapsTab({
 
   const leagueBandStart = Math.max(1, asOfWeek - 7)
   const leagueBandEnd = Math.max(0, asOfWeek - 1)
+  const bandEdges = useMemo(() => rollingBandEdges(asOfWeek), [asOfWeek])
 
   const teamsSorted = useMemo(
     () => [...data.teams].sort(compareTeamsByLeagueNumber),
@@ -106,14 +138,16 @@ export default function HandicapsTab({
               >
                 HCP
               </th>
-              {HANDICAPS_PRIOR_WEEK_LABELS.map((wk) => {
+              {HANDICAPS_PRIOR_WEEK_LABELS.map((wk, i) => {
                 const priorInBand = priorSeasonHeaderInRollingBand(asOfWeek, wk)
                 return (
                   <th
                     key={`prior-${wk}`}
                     className={`${styles.handicapsNumTh} ${wk === 12 ? styles.handicapsNumThPriorStart : ''} ${
                       wk === 18 ? styles.handicapsNumThPriorEnd : ''
-                    } ${priorInBand ? styles.handicapsHdrRollingBand : ''}`}
+                    } ${priorInBand ? styles.handicapsHdrRollingBand : ''} ${
+                      i === bandEdges.leftPriorIdx ? styles.handicapsRollingBandEdgeLeft : ''
+                    } ${i === bandEdges.rightPriorIdx ? styles.handicapsRollingBandEdgeRight : ''}`}
                   >
                     {wk}
                   </th>
@@ -124,7 +158,9 @@ export default function HandicapsTab({
                 return (
                   <th
                     key={w}
-                    className={`${styles.handicapsNumTh} ${inBand ? styles.handicapsHdrRollingBand : ''}`}
+                    className={`${styles.handicapsNumTh} ${inBand ? styles.handicapsHdrRollingBand : ''} ${
+                      w === bandEdges.leftWeek ? styles.handicapsRollingBandEdgeLeft : ''
+                    } ${w === bandEdges.rightWeek ? styles.handicapsRollingBandEdgeRight : ''}`}
                   >
                     {w}
                   </th>
@@ -170,7 +206,9 @@ export default function HandicapsTab({
                           key={`p-${i}`}
                           className={`${styles.handicapsTdNum} ${roleClass(b.priorRoles[i] ?? 'none')} ${
                             i === 0 ? styles.handicapsPriorDataEdgeLeft : ''
-                          } ${i === 6 ? styles.handicapsPriorDataEdgeRight : ''}`}
+                          } ${i === 6 ? styles.handicapsPriorDataEdgeRight : ''} ${
+                            i === bandEdges.leftPriorIdx ? styles.handicapsRollingBandEdgeLeft : ''
+                          } ${i === bandEdges.rightPriorIdx ? styles.handicapsRollingBandEdgeRight : ''}`}
                         >
                           {val == null ? '—' : val}
                         </td>
@@ -179,7 +217,12 @@ export default function HandicapsTab({
                         const val = b.weekValues.get(w) ?? null
                         const role = b.weekRoles.get(w) ?? 'none'
                         return (
-                          <td key={w} className={`${styles.handicapsTdNum} ${roleClass(role)}`}>
+                          <td
+                            key={w}
+                            className={`${styles.handicapsTdNum} ${roleClass(role)} ${
+                              w === bandEdges.leftWeek ? styles.handicapsRollingBandEdgeLeft : ''
+                            } ${w === bandEdges.rightWeek ? styles.handicapsRollingBandEdgeRight : ''}`}
+                          >
                             {val == null ? '—' : val}
                           </td>
                         )

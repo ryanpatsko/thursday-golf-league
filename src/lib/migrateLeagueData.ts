@@ -36,7 +36,6 @@ import {
   lakevueNorthSeniorHalves,
 } from '../data/defaultLeagueData'
 import { addDaysIso } from './dates'
-import { normalizePlayerContacts } from './playerContacts'
 
 function isLegacyCourse(course: unknown): course is { name: string; front: CourseNine; back: CourseNine } {
   if (!course || typeof course !== 'object') return false
@@ -163,7 +162,14 @@ export function migrateLeagueData(raw: LeagueData): LeagueData {
   }
   out = padScheduleToMetaTotalWeeks(out)
   out = migrateWeeklyScoresToDateKeys(out)
-  out = { ...out, playerContacts: normalizePlayerContacts(out.playerContacts) }
+
+  // Drop deprecated roster contact data (no longer shown or editable).
+  if ('playerContacts' in out) {
+    const { playerContacts: _removed, ...withoutContacts } = out as LeagueData & {
+      playerContacts?: unknown
+    }
+    out = withoutContacts
+  }
 
   return out
 }

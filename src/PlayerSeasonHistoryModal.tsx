@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { LeagueData, Player } from './data/leagueTypes'
 import {
+  formatGrossRecordedVsHandicap,
   formatHandicapIndex,
   getNineForWeek,
   grossTotalFromHoles,
+  handicapTotalFromHoles,
   isPullRow,
   netTotalForRow,
   playerHandicapIndexAtWeek,
@@ -315,11 +317,13 @@ export default function PlayerSeasonHistoryModal({
       const scoreRow = data.weeklyScores[player.id]?.[schedule.date]
       const nine = getNineForWeek(data.course, nineSide, player)
       const gross = grossTotalFromHoles(scoreRow)
+      const handicapGross =
+        scoreRow && scoreRow.holes?.length ? handicapTotalFromHoles(scoreRow, nine.holes) : null
       const handicapHistory = handicapTotalsBeforeWeek(data, player, week)
       const hcp = playerHandicapIndexAtWeek(player, handicapHistory, week)
       const net = netTotalForRow(scoreRow, hcp)
       const flightPts = flightPointsForWeek(data, player.flight, week).get(player.id) ?? 0
-      return { schedule, week, nineSide, scoreRow, nine, gross, net, hcp, flightPts }
+      return { schedule, week, nineSide, scoreRow, nine, gross, handicapGross, net, hcp, flightPts }
     })
   }, [data, player])
 
@@ -412,7 +416,12 @@ export default function PlayerSeasonHistoryModal({
                         </span>
                       </th>
                     ))}
-                    <th rowSpan={2} scope="col" className={`${styles.weeklyThNum} ${styles.weeklyThSep}`}>
+                    <th
+                      rowSpan={2}
+                      scope="col"
+                      className={`${styles.weeklyThNum} ${styles.weeklyThSep}`}
+                      title="Recorded 9-hole total; when shown as two numbers, second is handicap gross (each hole capped at double bogey)."
+                    >
                       Gross
                     </th>
                     <th rowSpan={2} scope="col" className={`${styles.weeklyThNum} ${styles.weeklyThSepLeft}`}>
@@ -448,10 +457,17 @@ export default function PlayerSeasonHistoryModal({
                       scoreRow: row,
                       nine,
                       gross,
+                      handicapGross,
                       net,
                       hcp: idx,
                       flightPts,
-                    }) => (
+                    }) => {
+                      const grsDisplay = formatGrossRecordedVsHandicap(gross, handicapGross)
+                      const grsTitle =
+                        gross != null && handicapGross != null && gross !== handicapGross
+                          ? `${gross} recorded / ${handicapGross} handicap gross (max +2 strokes vs par per hole)`
+                          : undefined
+                      return (
                       <tr key={`${schedule.date}-w${week}-${nineSide}`}>
                         <td className={`${styles.weeklyStickyCol} ${styles.weeklyHistoryDateCol}`}>
                           <div className={styles.weeklyPlayerCell}>
@@ -482,15 +498,16 @@ export default function PlayerSeasonHistoryModal({
                             </td>
                           )
                         })}
-                        <td className={`${styles.weeklyTdNum} ${styles.weeklyThSep}`}>
+                        <td
+                          className={`${styles.weeklyTdNum} ${styles.weeklyThSep} ${styles.weeklyGrsCell}`}
+                          title={grsTitle}
+                        >
                           {isPullRow(row) ? (
                             <span className={styles.weeklyPullBadge} title="Pull — net score copied from a flight peer">
                               P
                             </span>
-                          ) : gross == null ? (
-                            '—'
                           ) : (
-                            gross
+                            grsDisplay
                           )}
                         </td>
                         <td className={`${styles.weeklyTdNum} ${styles.weeklyThSepLeft}`}>
@@ -501,7 +518,8 @@ export default function PlayerSeasonHistoryModal({
                           {isPullRow(row) || net == null ? '—' : formatStandingPoints(flightPts)}
                         </td>
                       </tr>
-                    ),
+                      )
+                    },
                   )}
                 </tbody>
               </table>

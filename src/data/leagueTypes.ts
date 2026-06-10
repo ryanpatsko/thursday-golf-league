@@ -137,14 +137,6 @@ export interface GreeniesWeek {
 
 export type GreeniesByDate = Record<string, GreeniesWeek>
 
-/** Email and phone for a rostered player (keyed by player id in `playerContacts`). */
-export interface PlayerContact {
-  email?: string
-  phone?: string
-}
-
-export type PlayerContactsById = Record<string, PlayerContact>
-
 export interface LeagueData {
   version: number
   meta: LeagueMeta
@@ -162,6 +154,4 @@ export interface LeagueData {
   }
   /** Greenies (closest on par 3s) — winners per league night, keyed by schedule ISO date. */
   greenies?: GreeniesByDate
-  /** Roster contact info — keyed by player id. */
-  playerContacts?: PlayerContactsById
 }
