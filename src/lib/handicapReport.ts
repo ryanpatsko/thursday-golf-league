@@ -57,24 +57,20 @@ function buildHandicapPoolEntries(
   curEntries: { week: number; total: number }[],
   asOfLeagueWeek: number,
 ): HcPoolEntry[] {
-  const curTotals = curEntries.map((e) => e.total)
-  if (asOfLeagueWeek <= 7) {
-    const needFromPrior = Math.max(0, 7 - curTotals.length)
-    const start = Math.max(0, priors.length - needFromPrior)
-    const poolEntries: HcPoolEntry[] = []
-    for (let i = start; i < priors.length; i++) {
-      poolEntries.push({ kind: 'prior', priorIdx: i, value: priors[i]! })
-    }
-    for (const e of curEntries) {
-      poolEntries.push({ kind: 'week', week: e.week, value: e.total })
-    }
-    return poolEntries
+  const curRecent =
+    asOfLeagueWeek <= 7
+      ? curEntries
+      : curEntries.slice(Math.max(0, curEntries.length - 7))
+  const needFromPrior = Math.max(0, 7 - curRecent.length)
+  const start = Math.max(0, priors.length - needFromPrior)
+  const poolEntries: HcPoolEntry[] = []
+  for (let i = start; i < priors.length; i++) {
+    poolEntries.push({ kind: 'prior', priorIdx: i, value: priors[i]! })
   }
-  return curEntries.slice(Math.max(0, curEntries.length - 7)).map((e) => ({
-    kind: 'week' as const,
-    week: e.week,
-    value: e.total,
-  }))
+  for (const e of curRecent) {
+    poolEntries.push({ kind: 'week', week: e.week, value: e.total })
+  }
+  return poolEntries
 }
 
 function rolesForLastSevenPool(last7: HcPoolEntry[]): Map<number, HandicapCellRole> {

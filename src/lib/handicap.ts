@@ -111,14 +111,11 @@ export function computeHandicapIndexUnrounded(args: {
   const priors = [...priorSeasonScores]
   const cur = [...currentSeasonTotals]
 
-  let pool: number[]
-  if (asOfLeagueWeek <= 7) {
-    const needFromPrior = Math.max(0, 7 - cur.length)
-    const priorTail = priors.slice(Math.max(0, priors.length - needFromPrior))
-    pool = [...priorTail, ...cur]
-  } else {
-    pool = cur.slice(Math.max(0, cur.length - 7))
-  }
+  const curRecent =
+    asOfLeagueWeek <= 7 ? cur : cur.slice(Math.max(0, cur.length - 7))
+  const needFromPrior = Math.max(0, 7 - curRecent.length)
+  const priorTail = priors.slice(Math.max(0, priors.length - needFromPrior))
+  const pool = [...priorTail, ...curRecent]
 
   if (pool.length < 7) return null
 
@@ -133,8 +130,9 @@ export function computeHandicapIndexUnrounded(args: {
 /**
  * Rolling 9-hole handicap index: (average of 5 middle scores − 36) × 0.8 after dropping high/low from the most recent 7,
  * then rounded to the nearest whole number — that integer is what net scoring subtracts from gross.
- * Weeks 1–7: pool can include priorSeasonScores (oldest→newest) plus current season in order.
- * Week 8+: league rules use the most recent 7 only (implemented as: drop older prior-season entries once 7 current exist).
+ * Weeks 1–7: pool includes all qualifying current-season totals plus prior backfill to reach 7.
+ * Week 8+: pool uses the most recent 7 qualifying current-season totals; prior-season scores fill any
+ * shortfall (e.g. pulls). Once 7 current-season scores exist in the window, priors drop out.
  */
 export function computeHandicapIndex(args: {
   priorSeasonScores: number[]
