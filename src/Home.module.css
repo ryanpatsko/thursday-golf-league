@@ -101,6 +101,15 @@
   line-height: 1.15;
 }
 
+.titleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.titleLink:hover {
+  text-decoration: none;
+}
+
 .adminLink {
   display: inline-block;
   font-weight: 600;

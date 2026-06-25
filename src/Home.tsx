@@ -128,7 +128,11 @@ export default function Home() {
           <FaGolfBallTee className={styles.headerIcon} aria-hidden />
           <div className={styles.headerText}>
             <p className={styles.kicker}>{`Thursday nights · ${data?.course.name ?? 'Lakevue North'}`}</p>
-            <h1 className={styles.title}>Thursday Night Golf League</h1>
+            <h1 className={styles.title}>
+              <a href="/" className={styles.titleLink}>
+                Thursday Night Golf League
+              </a>
+            </h1>
           </div>
         </div>
       </header>
