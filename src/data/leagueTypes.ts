@@ -31,11 +31,11 @@ export interface LeagueMeta {
   totalWeeks: number
 }
 
-/** A single admin override value effective from a specific league week onward. */
+/** A single admin override value for one league week. */
 export interface HandicapOverrideEntry {
-  /** League week number (1-based) from which this value takes effect, inclusive. */
+  /** League week number (1-based) this override applies to. */
   startWeek: number
-  /** 9-hole handicap index to use from `startWeek` onward (until a later entry applies). */
+  /** 9-hole handicap index to use for that week only. */
   value: number
 }
 
@@ -49,10 +49,8 @@ export interface Player {
   /** Most recent rounds from the prior season (9-hole gross totals). Used for early-season handicap per league rules. */
   priorSeasonScores: number[]
   /**
-   * When entries are present, net scoring and handicap display use them instead of the rolling calculation.
-   * For a given league week N, the entry with the largest `startWeek ≤ N` is used.
-   * If no entry qualifies, the earliest entry is used as a fallback.
-   * Remove all entries (or the override object) to resume formula-based index (priors + current season).
+   * Per-week admin overrides: for league week N, an entry with `startWeek === N` replaces the rolling calculation.
+   * Weeks without an entry use the formula (priors + current season). Remove all entries to clear overrides.
    */
   handicapOverride?: {
     entries: HandicapOverrideEntry[]

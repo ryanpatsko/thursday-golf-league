@@ -146,11 +146,10 @@ export function computeHandicapIndex(args: {
 }
 
 /**
- * Parsed admin override value for a specific league week when override entries are present.
+ * Parsed admin override value for a specific league week when an override entry exists for that week.
  *
- * For week N, the entry with the largest `startWeek ≤ N` is used.
- * If no entry qualifies (all entries start after N), the earliest entry is used as a fallback
- * so the override always applies when any entries exist.
+ * Overrides are per-week only: week N uses an entry whose `startWeek` equals N, if any.
+ * Missing weeks fall back to the rolling formula via {@link playerHandicapIndexAtWeek}.
  */
 export function effectiveHandicapOverrideValue(
   player: Pick<Player, 'handicapOverride'>,
@@ -159,19 +158,10 @@ export function effectiveHandicapOverrideValue(
   const entries = player.handicapOverride?.entries
   if (!entries?.length) return null
 
-  // Find the entry with the largest startWeek that is still ≤ atWeek
-  let best: (typeof entries)[number] | null = null
-  for (const entry of entries) {
-    if (entry.startWeek <= atWeek) {
-      if (best == null || entry.startWeek > best.startWeek) best = entry
-    }
-  }
-  // Fall back to the earliest entry when atWeek precedes all entries
-  if (best == null) {
-    best = entries.reduce((a, b) => (a.startWeek < b.startWeek ? a : b))
-  }
+  const entry = entries.find((e) => e.startWeek === atWeek)
+  if (!entry) return null
 
-  const v = typeof best.value === 'number' ? best.value : Number(best.value)
+  const v = typeof entry.value === 'number' ? entry.value : Number(entry.value)
   if (!Number.isFinite(v)) return null
   return v
 }
