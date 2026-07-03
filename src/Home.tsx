@@ -12,10 +12,12 @@ import RecapsTab from './RecapsTab.tsx'
 import StandingsTab from './StandingsTab.tsx'
 import WeeklyScoresTab from './WeeklyScoresTab.tsx'
 import FourManTab from './FourManTab.tsx'
+import PlayoffsTab from './PlayoffsTab.tsx'
 import styles from './Home.module.css'
 
 const HOME_TABS = [
   'standings',
+  'playoffs',
   'weekly',
   'four',
   'handicaps',
@@ -28,6 +30,7 @@ type HomeTabId = (typeof HOME_TABS)[number]
 
 const TAB_LABELS: Record<HomeTabId, string> = {
   standings: 'Standings',
+  playoffs: 'Playoffs',
   weekly: 'Weekly scores',
   handicaps: 'Handicaps',
   recaps: 'Recaps',
@@ -154,6 +157,9 @@ export default function Home() {
                   onClick={() => setActiveTab(id)}
                 >
                   {TAB_LABELS[id]}
+                  {id === 'playoffs' ? (
+                    <span className={styles.tabNewBadge}>New</span>
+                  ) : null}
                 </button>
               ))}
             </div>
@@ -165,6 +171,11 @@ export default function Home() {
                   selectedWeek={selectedWeek}
                   onSelectWeek={setSelectedWeekAndUrl}
                 />
+              </div>
+            ) : null}
+            {activeTab === 'playoffs' ? (
+              <div role="tabpanel" className={styles.tabPanel}>
+                <PlayoffsTab data={data} />
               </div>
             ) : null}
             {activeTab === 'weekly' ? (
